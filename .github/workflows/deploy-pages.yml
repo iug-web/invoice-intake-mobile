@@ -23,7 +23,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v6
-      - name: Assemble verified static site
+      - name: Assemble static site from pinned releases
         shell: bash
         run: |
           set -euo pipefail
@@ -38,10 +38,6 @@ jobs:
           a8e29918d098b2b06e1012bdaeffb4aec0445c5d5654709023e0bd1f442a80e8  _site/vendor/tesseract.min.js
           aca1229639fc9907d86f96e825955a2b7c5716d17f3bc3acd71f9c7ab66181fc  _site/vendor/worker.min.js
           cc015130aa8521e7f088f88898eba949ccdcbfb38df0bd129b44b7273c3a6f41  _site/vendor/xlsx.full.min.js
-          79bc1719fc7e8fd16430621b4df273b56b0172ce7634fe380c01197147350777  _site/vendor/core/tesseract-core-lstm.wasm.js
-          e3984b51617f138181d8ca157493be9afc8c764897e2f8bf57581b0422fc0f28  _site/vendor/core/tesseract-core-lstm.wasm
-          9784f7c917c546424b690fcde708ce1f604a4393d08bb51ddab146d7d7c794e6  _site/vendor/lang/chi_sim.traineddata
-          5dc5d8d640a212c9d6184921ba103b186f50e0fed9ee716c53e6b312b400d747  _site/vendor/lang/eng.traineddata
           CHECKSUMS
           gzip -n _site/vendor/lang/chi_sim.traineddata _site/vendor/lang/eng.traineddata
           curl --fail --location --retry 3 --max-time 60 https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js.LICENSE.txt -o _site/vendor/tesseract.min.js.LICENSE.txt
