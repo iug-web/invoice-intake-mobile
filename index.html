@@ -66,6 +66,18 @@ b.new{color:var(--red)}
 .spin{display:inline-block;width:15px;height:15px;border:2px solid var(--line);border-top-color:var(--red);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spin{animation:none}}
+
+.tabs{display:flex;gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:4px;margin:10px 0}
+.tab{flex:1;padding:9px 4px;border:0;background:transparent;border-radius:9px;font-size:15px;color:var(--muted);position:relative}
+.tab.on{background:var(--ink);color:var(--bg);font-weight:600}
+.tab i{font-style:normal;font-size:11px;margin-left:3px;background:var(--red);color:#fff;border-radius:99px;padding:0 5px;vertical-align:1px}
+.tab.on i{background:var(--bg);color:var(--ink)}
+.mchip{padding:7px 14px;border:1px solid var(--line);background:var(--paper);border-radius:99px;font-size:14px}
+.mchip.on{background:var(--blue-soft);border-color:var(--blue);color:var(--blue);font-weight:600}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.thumbs img{width:62px;height:62px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+label.addp{display:inline-flex;align-items:center;justify-content:center;padding:12px 10px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-size:15px;cursor:pointer}
+.card .row button{flex:1}
 hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 </style>
 </head>
@@ -227,22 +239,26 @@ var SEED_MEM = [
 ];
 "use strict";
 /* ---------- 存储 ---------- */
-var LS = { prov: "ju_prov", mem: "ju_mem", items: "ju_items", orders: "ju_orders" };
+var LS = { prov: "ju_prov", mem: "ju_mem", items: "ju_items", pending: "ju_pending", done: "ju_done" };
 function lget(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
 function lset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
 
 /* ---------- AI 供应商 ---------- */
 var PROVIDERS = [
-  { id: "openrouter", name: "OpenRouter 免费路由", url: "https://openrouter.ai/api/v1/chat/completions",
-    model: "openrouter/free", maxImg: 3, maxTok: 4000, items: true, cors: "支持浏览器调用", site: "openrouter.ai" },
-  { id: "glm41v", name: "智谱 GLM-4.1V-Thinking", url: "https://open.bigmodel.cn/api/paas/v4/chat/completions",
-    model: "glm-4.1v-thinking-flash", maxImg: 1, maxTok: 4000, items: true, raw: true, cors: "可能被浏览器拦截", site: "bigmodel.cn" },
-  { id: "glm4v", name: "智谱 GLM-4V-Flash", url: "https://open.bigmodel.cn/api/paas/v4/chat/completions",
-    model: "glm-4v-flash", maxImg: 1, maxTok: 1024, items: false, raw: true, cors: "可能被浏览器拦截", site: "bigmodel.cn" },
   { id: "siliconflow", name: "硅基流动", url: "https://api.siliconflow.cn/v1/chat/completions",
-    model: "", maxImg: 1, maxTok: 4000, items: true, cors: "可能被浏览器拦截", site: "siliconflow.cn" },
+    model: "THUDM/GLM-4.1V-9B-Thinking", maxImg: 2, maxTok: 4000, items: true, cors: "网页可用", site: "siliconflow.cn" },
+  { id: "qwen", name: "通义千问 VL", url: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+    model: "qwen-vl-max-latest", maxImg: 3, maxTok: 4000, items: true, cors: "网页可用", site: "bailian.console.aliyun.com" },
+  { id: "kimi", name: "Kimi 视觉", url: "https://api.moonshot.cn/v1/chat/completions",
+    model: "moonshot-v1-8k-vision-preview", maxImg: 2, maxTok: 4000, items: true, cors: "网页可用", site: "platform.moonshot.cn" },
+  { id: "openrouter", name: "OpenRouter 免费路由", url: "https://openrouter.ai/api/v1/chat/completions",
+    model: "openrouter/free", maxImg: 3, maxTok: 4000, items: true, cors: "网页可用·国内可能连不上", site: "openrouter.ai" },
+  { id: "glm41v", name: "智谱 GLM-4.1V-Thinking", url: "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+    model: "glm-4.1v-thinking-flash", maxImg: 1, maxTok: 4000, items: true, raw: true, cors: "网页不可用", site: "bigmodel.cn" },
+  { id: "glm4v", name: "智谱 GLM-4V-Flash", url: "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+    model: "glm-4v-flash", maxImg: 1, maxTok: 1024, items: false, raw: true, cors: "网页不可用", site: "bigmodel.cn" },
   { id: "doubao", name: "豆包·火山方舟", url: "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
-    model: "", maxImg: 3, maxTok: 4000, items: true, cors: "可能被浏览器拦截", site: "volcengine.com" }
+    model: "", maxImg: 3, maxTok: 4000, items: true, cors: "网页不可用", site: "volcengine.com" }
 ];
 function provState() {
   var s = lget(LS.prov, {});
@@ -413,7 +429,7 @@ function moneySummary(S) {
     + (bad ? "；有 " + bad + " 行数量×单价对不上" : "；每行数量×单价都对");
 }
 
-/* ---------- 界面 ---------- */
+/* ---------- 界面基础 ---------- */
 var app = document.getElementById("app"), bar = document.getElementById("bar");
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 function render(html, buttons) {
@@ -424,84 +440,210 @@ function render(html, buttons) {
     el.onclick = b.fn; bar.appendChild(el);
   });
   bar.style.display = (buttons && buttons.length) ? "flex" : "none";
-  window.scrollTo(0, 0);
 }
 function toast(msg) { var d = document.getElementById("toast"); if (d) d.textContent = msg; }
+function fmtTime(t) { var d = new Date(t); return (d.getMonth() + 1) + "-" + d.getDate() + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
 
-/* ---------- 首页 ---------- */
-var shot = null, S = null;
-function home() {
+/* ---------- 状态 ---------- */
+var TAB = "in", MODE = "photo", DRAFTS = [], S = null, seq = 1;
+function tabs() {
+  var t = [["in", "录入"], ["pend", "待上传", lget(LS.pending, []).length], ["done", "已上传", lget(LS.done, []).length], ["set", "设置"]];
+  return '<div class="tabs">' + t.map(function (x) {
+    return '<button class="tab' + (TAB === x[0] ? " on" : "") + '" onclick="go(\'' + x[0] + '\')">' + x[1]
+      + (x[2] ? '<i>' + x[2] + '</i>' : '') + '</button>';
+  }).join("") + '</div>';
+}
+function go(t) { TAB = t; draw(); }
+function draw() {
+  if (TAB === "in") pageIn();
+  else if (TAB === "pend") pageList("pend");
+  else if (TAB === "done") pageList("done");
+  else pageSet();
+}
+function head(sub) {
   var st = provState(), n = provUsable(st).length;
-  render('<h1>单据识别 <span>品名 ' + ITEMS.length + ' · 记忆 ' + MEM.length + '</span></h1>'
-    + '<p class="sub">拍手写订购单或供应商销售单 → 对应二维火品名 → 核对金额 → 你确认后才学习</p>'
-    + (n ? '' : '<div class="card"><b class="err">还没设置 AI</b><div class="dim">点下面「设置」填一个免费 API Key，才能识别。</div></div>')
-    + '<div class="pick">'
-    + '<label><span class="ic">📷</span><b>拍照</b><s>打开相机</s><input type="file" id="cam" accept="image/*" capture="environment"></label>'
-    + '<label><span class="ic">🖼️</span><b>相册</b><s>选已拍好的</s><input type="file" id="lib" accept="image/*"></label>'
-    + '</div>'
-    + '<div class="card"><div class="row"><button class="ghost" onclick="settings()">⚙️ 设置 AI</button>'
-    + '<button class="ghost" onclick="libPage()">📦 品名库</button>'
-    + '<button class="ghost" onclick="memPage()">🧠 纠正记忆</button>'
-    + '<button class="ghost" onclick="ordersPage()">📄 已存单据</button></div></div>'
-    + '<p class="dim" id="toast"></p>', []);
-  ["cam", "lib"].forEach(function (id) {
-    document.getElementById(id).onchange = function (e) { var f = e.target.files[0]; e.target.value = ""; if (f) start(f); };
-  });
+  return '<h1>单据录入 <span>' + (n ? "AI " + n + " 个可用" : '<b class="err">未设置 AI</b>') + '</span></h1>'
+    + tabs() + (sub ? '<p class="sub">' + sub + '</p>' : '');
 }
 
-/* ---------- 识别 ---------- */
-function start(file) {
-  var st = provState(), u = provUsable(st);
-  if (!u.length) { settings(); return; }
-  render('<h1>读字中…</h1><p class="sub" id="who"><span class="spin"></span> 正在准备图片</p><div id="log"></div>', []);
-  var errs = [];
-  readImg(file).then(function (img) {
-    shot = cut(img, 0, 0, img.naturalWidth, img.naturalHeight, 900, 0.7);
-    var step = function (i) {
-      if (i >= u.length) { return Promise.reject(new Error("所有模型都失败了")); }
-      var p = u[i], pack = packImages(img, p.maxImg);
-      document.getElementById("who").innerHTML = '<span class="spin"></span> 正在用：' + esc(p.name) + '（通常 10～90 秒）';
-      var content = pack.imgs.map(function (d) { return { type: "image_url", image_url: { url: p.raw ? d : "data:image/jpeg;base64," + d } }; });
-      content.push({ type: "text", text: buildPrompt(pack.desc, p.items !== false) });
-      return callAI(p, st.keys[p.id], content, /thinking/.test(p.model) ? 180000 : 90000)
-        .then(function (t) { var r = parseReply(t); r.by = p.name; return r; })
-        .catch(function (e) {
-          errs.push(p.name + "：" + (e.message || e));
-          document.getElementById("log").innerHTML = errs.map(function (x) { return '<p class="dim err">✗ ' + esc(x) + '</p>'; }).join("");
-          return step(i + 1);
-        });
-    };
-    return step(0);
-  }).then(function (r) {
-    S = r; S.thumb = shot;
-    S.rows.forEach(function (row) { row.cands = candidates(row); var b = row.cands[0];
-      row.chosen = (b && b.s >= 0.45) ? b.name : "__hand"; });
-    table();
+/* ---------- 录入页 ---------- */
+function pageIn() {
+  var modes = [["photo", "拍照识别"], ["text", "粘贴文字"], ["manual", "手动"]];
+  var h = head("")
+    + '<div class="pick">'
+    + '<label><span class="ic">📷</span><b>拍照</b><s>打开相机拍单据</s><input type="file" id="cam" accept="image/*" capture="environment"></label>'
+    + '<label><span class="ic">🖼️</span><b>相册</b><s>选已拍好的照片</s><input type="file" id="lib" accept="image/*" multiple></label>'
+    + '</div>'
+    + '<div class="chips">' + modes.map(function (m) {
+        return '<button class="mchip' + (MODE === m[0] ? " on" : "") + '" onclick="setMode(\'' + m[0] + '\')">' + m[1] + '</button>'; }).join("") + '</div>'
+    + '<p class="dim">' + (MODE === "photo"
+        ? "有网时用免费 AI 识别（手写潦草也能认）。认不准的品名会按二维火原料表模糊匹配，列出候选让你点选，点过的会记住。"
+        : MODE === "text" ? "把别处复制来的单据文字粘进去，不用拍照。"
+        : "自己一行一行填，适合只有两三样东西的时候。") + '</p>';
+
+  if (MODE === "text") {
+    h += '<div class="card"><textarea id="raw" placeholder="每行一条，用竖线或空格分隔：&#10;1 鱿鱼花 件 2 2 60 120&#10;2 火箭鱿鱼 件 1 1 165 165"></textarea>'
+      + '<div class="row" style="margin-top:8px"><button class="red" onclick="fromText()">整理成单据</button></div></div>';
+  } else if (MODE === "manual") {
+    h += '<div class="card"><div class="row"><input type="text" id="mn" placeholder="品名" style="flex:2">'
+      + '<input type="text" id="mq" placeholder="数量" style="flex:1"><input type="text" id="mp" placeholder="单价" style="flex:1">'
+      + '<button class="ghost" onclick="manualAdd()">加一行</button></div>'
+      + '<div id="mlist" class="dim" style="margin-top:8px"></div>'
+      + '<div class="row" style="margin-top:8px"><button class="red" onclick="manualDone()">完成</button></div></div>';
+  }
+
+  h += DRAFTS.map(function (d, i) { return draftCard(d, i); }).join("")
+    + '<p class="dim" id="toast"></p>';
+  render(h, []);
+  var cam = document.getElementById("cam"), lib = document.getElementById("lib");
+  if (cam) cam.onchange = function (e) { var f = e.target.files[0]; e.target.value = ""; if (f) newDraft([f]); };
+  if (lib) lib.onchange = function (e) { var f = Array.prototype.slice.call(e.target.files); e.target.value = ""; if (f.length) newDraft(f); };
+  if (window.__manual) renderManual();
+}
+function setMode(m) { MODE = m; window.__manual = m === "manual" ? (window.__manual || []) : null; draw(); }
+function draftCard(d, i) {
+  var st = d.status;
+  return '<div class="card"><div class="top"><span class="rn">单据 ' + d.n + '</span>'
+    + '<span class="meta">' + d.pages.length + ' 页</span></div>'
+    + '<div class="thumbs">' + d.pages.map(function (p) { return '<img src="data:image/jpeg;base64,' + p.thumb + '">'; }).join("") + '</div>'
+    + '<div class="row" style="margin-top:8px">'
+    + (st === "run" ? '<button disabled><span class="spin"></span> 识别中…</button>'
+       : st === "ok" ? '<button class="red" onclick="openDraft(' + i + ')">核对 ' + d.result.rows.length + ' 行</button>'
+       : '<button class="red" onclick="runDraft(' + i + ')">' + (st === "err" ? "重试识别" : "开始识别") + '</button>')
+    + '<label class="addp">加一页<input type="file" accept="image/*" onchange="addPage(' + i + ',this)"></label>'
+    + '<button class="ghost" onclick="delDraft(' + i + ')">删除</button></div>'
+    + (d.msg ? '<p class="dim ' + (st === "err" ? "err" : "") + '">' + esc(d.msg) + '</p>' : '')
+    + '</div>';
+}
+
+/* ---------- 单据草稿 ---------- */
+function newDraft(files) {
+  var d = { n: seq++, pages: [], status: "new", msg: "", img: [] };
+  DRAFTS.unshift(d); draw();
+  addFiles(d, files).then(function () { draw(); runDraft(DRAFTS.indexOf(d)); });
+}
+function addFiles(d, files) {
+  return files.reduce(function (p, f) {
+    return p.then(function () {
+      return readImg(f).then(function (img) {
+        d.img.push(img);
+        d.pages.push({ thumb: cut(img, 0, 0, img.naturalWidth, img.naturalHeight, 280, 0.6) });
+      });
+    });
+  }, Promise.resolve());
+}
+function addPage(i, input) {
+  var d = DRAFTS[i], f = input.files[0]; input.value = "";
+  if (!f) return;
+  addFiles(d, [f]).then(function () { d.status = "new"; d.msg = "已加一页，请重新识别"; draw(); });
+}
+function delDraft(i) { DRAFTS.splice(i, 1); draw(); }
+function openDraft(i) { S = DRAFTS[i].result; S.draft = i; table(); }
+
+function runDraft(i) {
+  var d = DRAFTS[i], st = provState(), u = provUsable(st);
+  if (!u.length) { TAB = "set"; draw(); return; }
+  d.status = "run"; d.msg = ""; draw();
+  var errs = [], t0 = Date.now();
+  var tick = setInterval(function () {
+    var el = document.querySelector(".card .spin"); if (el && el.parentNode) el.parentNode.childNodes[1].nodeValue = " 识别中… " + Math.round((Date.now() - t0) / 1000) + " 秒";
+  }, 1000);
+  var step = function (k) {
+    if (k >= u.length) return Promise.reject(new Error("所有模型都失败了"));
+    var p = u[k];
+    d.msg = "正在用：" + p.name; draw();
+    return recognizeDraft(d, p, st.keys[p.id])
+      .then(function (r) { r.by = p.name; return r; })
+      .catch(function (e) { errs.push(p.name + "：" + (e.message || e)); return step(k + 1); });
+  };
+  step(0).then(function (r) {
+    clearInterval(tick);
+    d.result = r; d.result.rows.forEach(function (row) {
+      row.cands = candidates(row); var b = row.cands[0];
+      row.chosen = (b && b.s >= 0.45) ? b.name : "__hand";
+    });
+    d.status = "ok"; d.msg = "由 " + r.by + " 识别，用时 " + Math.round((Date.now() - t0) / 1000) + " 秒"; draw();
   }).catch(function (e) {
-    render('<h1>识别失败</h1><p class="sub">每一家都试过了，原因如下：</p>'
-      + errs.map(function (x) { return '<div class="card"><span class="err">' + esc(x) + '</span></div>'; }).join("")
-      + (errs.length ? '' : '<div class="card"><span class="err">' + esc(e.message || e) + '</span></div>')
-      + '<p class="dim">提示：若写着「跨域(CORS)拦截」，表示这家接口不允许网页直接调用，请改用 OpenRouter。</p>',
-      [{ t: "返回", fn: home }, { t: "设置 AI", cls: "red", fn: settings }]);
+    clearInterval(tick);
+    d.status = "err"; d.msg = errs.length ? errs.join("； ") : String(e.message || e); draw();
   });
+}
+function recognizeDraft(d, p, key) {
+  // 一次能送多张图就一起送；只能送一张就逐页识别后合并
+  if (p.maxImg >= d.img.length) {
+    var all = [], desc;
+    d.img.forEach(function (img) { all.push(cut(img, 0, 0, img.naturalWidth, img.naturalHeight, 1800)); });
+    if (d.img.length === 1) { var pk = packImages(d.img[0], p.maxImg); all = pk.imgs; desc = pk.desc; }
+    else desc = "这张单据有 " + d.img.length + " 页，按顺序给你，请从第一页开始连续编号。";
+    var content = all.map(function (b) { return { type: "image_url", image_url: { url: p.raw ? b : "data:image/jpeg;base64," + b } }; });
+    content.push({ type: "text", text: buildPrompt(desc, p.items !== false) });
+    return callAI(p, key, content, /thinking/.test(p.model) ? 180000 : 90000).then(parseReply);
+  }
+  return d.img.reduce(function (chain, img, idx) {
+    return chain.then(function (acc) {
+      var b = cut(img, 0, 0, img.naturalWidth, img.naturalHeight, 1800);
+      var content = [{ type: "image_url", image_url: { url: p.raw ? b : "data:image/jpeg;base64," + b } },
+        { type: "text", text: buildPrompt("这是单据的第 " + (idx + 1) + " 页。", p.items !== false) }];
+      return callAI(p, key, content, /thinking/.test(p.model) ? 180000 : 90000).then(function (t) {
+        var r = parseReply(t);
+        r.rows.forEach(function (x) { x.no = acc.rows.length + 1; acc.rows.push(x); });
+        ["date", "supplier", "type", "total"].forEach(function (k) { if (!acc[k] && r[k]) acc[k] = r[k]; });
+        return acc;
+      });
+    });
+  }, Promise.resolve({ rows: [], date: "", supplier: "", type: "", total: "" }));
+}
+
+/* ---------- 粘贴文字 / 手动 ---------- */
+function fromText() {
+  var raw = document.getElementById("raw").value.trim();
+  if (!raw) { toast("先粘贴文字"); return; }
+  var lines = raw.split(/\r?\n/).filter(function (x) { return x.trim(); });
+  var body = lines.map(function (l) { return l.trim().replace(/\s+/g, "|"); }).join("\n");
+  try {
+    var r = parseReply(body);
+    var d = { n: seq++, pages: [], img: [], status: "ok", msg: "来自粘贴的文字", result: r };
+    r.rows.forEach(function (row) { row.cands = candidates(row); var b = row.cands[0]; row.chosen = (b && b.s >= 0.45) ? b.name : "__hand"; });
+    DRAFTS.unshift(d); MODE = "photo"; draw();
+  } catch (e) { toast("没读出表格：" + e.message); }
+}
+function renderManual() {
+  var el = document.getElementById("mlist"); if (!el) return;
+  var L = window.__manual || [];
+  el.innerHTML = L.length ? L.map(function (x, i) { return esc((i + 1) + ". " + x.hand + " " + (x.qty || "") + " " + (x.price || "")); }).join("<br>") : "还没有行";
+}
+function manualAdd() {
+  var n = document.getElementById("mn").value.trim();
+  if (!n) return;
+  window.__manual = window.__manual || [];
+  window.__manual.push({ no: window.__manual.length + 1, hand: n, unit: "", qty: document.getElementById("mq").value.trim(),
+    actual: "", price: document.getElementById("mp").value.trim(), amount: "", code: "", spec: "" });
+  ["mn", "mq", "mp"].forEach(function (id) { document.getElementById(id).value = ""; });
+  document.getElementById("mn").focus(); renderManual();
+}
+function manualDone() {
+  var L = window.__manual || [];
+  if (!L.length) { toast("还没有行"); return; }
+  var r = { rows: L, date: "", supplier: "", type: "手动", total: "" };
+  r.rows.forEach(function (row) { row.cands = candidates(row); var b = row.cands[0]; row.chosen = (b && b.s >= 0.45) ? b.name : "__hand"; });
+  DRAFTS.unshift({ n: seq++, pages: [], img: [], status: "ok", msg: "手动录入", result: r });
+  window.__manual = null; MODE = "photo"; draw();
 }
 
 /* ---------- 对照表 ---------- */
 function table() {
   var money = moneySummary(S);
-  var html = '<h1>对照二维火品名</h1><p class="sub">'
-    + esc([S.type, S.supplier, S.date && "日期 " + S.date].filter(Boolean).join(" · "))
-    + '<br>' + S.rows.length + ' 行，由 ' + esc(S.by || "") + ' 识别'
-    + (money ? '<br><b>' + esc(money) + '</b>' : '') + '</p>'
-    + (S.thumb ? '<img class="shot" src="data:image/jpeg;base64,' + S.thumb + '">' : '');
+  var h = '<h1>核对单据 <span>' + S.rows.length + ' 行</span></h1>'
+    + '<p class="sub">' + esc([S.type, S.supplier, S.date && "日期 " + S.date].filter(Boolean).join(" · "))
+    + (S.by ? '<br>由 ' + esc(S.by) + ' 识别' : '') + (money ? '<br><b>' + esc(money) + '</b>' : '') + '</p>';
   S.rows.forEach(function (r, i) {
-    var c = r.cands, pre = r.chosen, top = c.filter(function (x) { return x.name === pre; })[0];
+    var c = r.cands || (r.cands = candidates(r)), pre = r.chosen, top = c.filter(function (x) { return x.name === pre; })[0];
     var tag = pre === "__hand" ? '<span class="tag t-no">未对应</span>'
       : (top && top.s >= 0.9) ? '<span class="tag t-ok">确定</span>' : '<span class="tag t-maybe">请确认</span>';
     var k = rowCheck(r);
     var meta = [r.code, r.spec, r.qty && "申请 " + r.qty + (r.unit || ""), r.actual && "实到 " + r.actual,
       r.price && "单价 " + r.price, r.amount && "金额 " + r.amount].filter(Boolean).join(" · ");
-    html += '<div class="card"><div class="top"><span class="rn">' + esc(r.no) + '. ' + esc(r.hand) + '</span>' + tag + '</div>'
+    h += '<div class="card"><div class="top"><span class="rn">' + esc(r.no) + '. ' + esc(r.hand) + '</span>' + tag + '</div>'
       + '<div class="meta">' + esc(meta)
       + (k.ok === false ? ' <span class="tag t-no">' + esc(k.txt) + '</span>' : k.ok ? ' <span class="tag t-ok">金额✓</span>' : '') + '</div>'
       + '<select data-i="' + i + '">'
@@ -510,9 +652,9 @@ function table() {
       + '<option value="__hand"' + (pre === "__hand" ? " selected" : "") + '>保留「' + esc(r.hand) + '」</option>'
       + '</select></div>';
   });
-  html += '<hr><p class="sub">或者：按顺序贴正确品名（例：1墨斗鱼 2带壳蛏子…）</p><textarea id="ans"></textarea>'
+  h += '<hr><p class="sub">或者：按顺序贴正确品名（例：1墨斗鱼 2带壳蛏子…）</p><textarea id="ans"></textarea>'
     + '<p class="dim" id="toast"></p>';
-  render(html, [{ t: "返回", fn: home }, { t: "按答案对照", fn: applyAnswers }, { t: "确认", cls: "red", fn: confirmStep }]);
+  render(h, [{ t: "返回", fn: function () { S = null; go("in"); } }, { t: "按答案对照", fn: applyAnswers }, { t: "确认", cls: "red", fn: confirmStep }]);
   Array.prototype.forEach.call(document.querySelectorAll("select[data-i]"), function (sel) {
     sel.onchange = function () { S.rows[+sel.getAttribute("data-i")].chosen = sel.value; table(); };
   });
@@ -537,8 +679,8 @@ function applyAnswers() {
   S.rows.sort(function (a, b) { return a.no - b.no; });
   S.rows.forEach(function (r) { r.cands = candidates(r); if (r.answer) r.chosen = r.cands[0] ? r.cands[0].name : "__hand"; });
   S.answered = ans.length;
-  table();
   var n = S.rows.filter(function (x) { return x.hand; }).length;
+  table();
   toast(ans.length !== n ? "注意：识别出 " + n + " 行，答案有 " + ans.length + " 行，可能错位，请逐行核对" : "已按答案对照 " + ans.length + " 行");
 }
 
@@ -555,7 +697,7 @@ function confirmStep() {
   if (!pairs.length) { save([]); return; }
   var n = S.rows.filter(function (x) { return x.hand; }).length;
   var warn = S.answered && S.answered !== n ? "识别出 " + n + " 行，答案有 " + S.answered + " 行，可能错位了。已全部取消勾选，请逐条核对后再勾。" : "";
-  render('<h1>是否学习？</h1><p class="sub">只有勾选的会记住。单据结果不受影响，照样保存。</p>'
+  render('<h1>是否学习？</h1><p class="sub">只有勾选的会记住，下次遇到同样的字就自动对上。单据照样保存。</p>'
     + (warn ? '<p class="err">' + esc(warn) + '</p>' : '')
     + pairs.map(function (p, i) { return '<label class="card ck"><input type="checkbox" id="p' + i + '"' + (warn ? '' : ' checked') + '>'
       + '<div><div><s class="old">' + esc(p.wrong) + '</s> → <b class="new">' + esc(p.right) + '</b></div>'
@@ -576,16 +718,57 @@ function save(learned) {
     return { no: r.no, item: name, hand: r.hand, unit: r.unit || (it ? it.unit : ""), qty: r.qty, actual: r.actual,
       price: r.price, amount: r.amount, check: rowCheck(r).txt, code: it ? it.code : "", cat: it ? it.cat : "" };
   });
-  var rec = { type: S.type, supplier: S.supplier, date: S.date, total: S.total, by: S.by, at: Date.now(), rows: out };
-  var all = lget(LS.orders, []); all.unshift(rec); lset(LS.orders, all.slice(0, 50));
-  var tsv = tsvOf(rec);
-  var un = out.filter(function (r) { return !r.item; }).length;
-  render('<h1>已保存</h1>'
-    + (moneySummary(S) ? '<p><b>' + esc(moneySummary(S)) + '</b></p>' : '')
-    + '<p>学习了 ' + learned.length + ' 条　' + (un ? '<b class="err">' + un + ' 行未对应</b>' : '<span class="ok">全部对应</span>') + '</p>'
-    + learned.map(function (p) { return '<div><s class="old">' + esc(p.wrong) + '</s> → <b class="new">' + esc(p.right) + '</b></div>'; }).join("")
-    + '<hr><pre>' + esc(tsv) + '</pre><p class="dim" id="toast"></p>',
-    [{ t: "复制表格", fn: function () { copy(tsv); } }, { t: "再拍一张", cls: "red", fn: home }]);
+  var rec = { type: S.type, supplier: S.supplier, date: S.date, total: S.total, by: S.by, at: Date.now(), rows: out,
+    money: moneySummary(S), un: out.filter(function (r) { return !r.item; }).length };
+  var pend = lget(LS.pending, []); pend.unshift(rec); lset(LS.pending, pend.slice(0, 100));
+  if (S.draft != null && DRAFTS[S.draft]) DRAFTS.splice(S.draft, 1);
+  S = null; TAB = "pend"; draw();
+  toast("已存入待上传，学习了 " + learned.length + " 条");
+}
+
+/* ---------- 待上传 / 已上传 ---------- */
+function pageList(which) {
+  var key = which === "pend" ? LS.pending : LS.done, L = lget(key, []);
+  var h = head(which === "pend" ? "核对好的单据先放这里，录进二维火后点「标记已上传」。" : "已经录进二维火的单据，保留最近 100 张。")
+    + (L.length ? L.map(function (r, i) {
+      return '<div class="card"><div class="top"><span class="rn">'
+        + esc([r.type || "单据", r.supplier, r.date].filter(Boolean).join(" · ")) + '</span>'
+        + (r.un ? '<span class="tag t-no">' + r.un + ' 行未对应</span>' : '<span class="tag t-ok">全部对应</span>') + '</div>'
+        + '<div class="meta">' + r.rows.length + ' 行 · ' + fmtTime(r.at) + (r.money ? ' · ' + esc(r.money) : '') + '</div>'
+        + '<div class="row" style="margin-top:8px"><button class="ghost" onclick="copyRec(\'' + which + '\',' + i + ')">复制表格</button>'
+        + '<button class="ghost" onclick="viewRec(\'' + which + '\',' + i + ')">查看</button>'
+        + (which === "pend" ? '<button class="red" onclick="markDone(' + i + ')">标记已上传</button>'
+           : '<button class="ghost" onclick="backPend(' + i + ')">退回待上传</button>')
+        + '<button class="ghost" onclick="delRec(\'' + which + '\',' + i + ')">删除</button></div></div>';
+    }).join("") : '<p class="dim">还没有单据。</p>')
+    + '<p class="dim" id="toast"></p>';
+  render(h, []);
+}
+function recOf(which, i) { return lget(which === "pend" ? LS.pending : LS.done, [])[i]; }
+function copyRec(which, i) { var r = recOf(which, i); if (r) copy(tsvOf(r)); }
+function viewRec(which, i) {
+  var r = recOf(which, i); if (!r) return;
+  render('<h1>' + esc([r.type || "单据", r.supplier, r.date].filter(Boolean).join(" · ")) + '</h1>'
+    + '<p class="sub">' + r.rows.length + ' 行 · ' + fmtTime(r.at) + (r.by ? ' · ' + esc(r.by) : '') + (r.money ? '<br><b>' + esc(r.money) + '</b>' : '') + '</p>'
+    + '<pre>' + esc(tsvOf(r)) + '</pre><p class="dim" id="toast"></p>',
+    [{ t: "返回", fn: function () { go(which); } }, { t: "复制表格", cls: "red", fn: function () { copy(tsvOf(r)); } }]);
+}
+function markDone(i) {
+  var p = lget(LS.pending, []), r = p.splice(i, 1)[0];
+  if (!r) return;
+  r.uploadedAt = Date.now();
+  var d = lget(LS.done, []); d.unshift(r);
+  lset(LS.pending, p); lset(LS.done, d.slice(0, 100)); draw();
+}
+function backPend(i) {
+  var d = lget(LS.done, []), r = d.splice(i, 1)[0];
+  if (!r) return;
+  var p = lget(LS.pending, []); p.unshift(r);
+  lset(LS.done, d); lset(LS.pending, p); draw();
+}
+function delRec(which, i) {
+  var key = which === "pend" ? LS.pending : LS.done, L = lget(key, []);
+  L.splice(i, 1); lset(key, L); draw();
 }
 function tsvOf(rec) {
   var h = [];
@@ -597,53 +780,65 @@ function tsvOf(rec) {
   return t + (rec.total ? "\n\t\t单据总计\t\t\t\t\t" + rec.total : "");
 }
 function copy(t) {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(t).then(function () { toast("已复制，可粘贴到表格"); }, function () { fallback(); });
-  } else fallback();
   function fallback() {
     var a = document.createElement("textarea"); a.value = t; a.style.position = "fixed"; a.style.opacity = "0";
     document.body.appendChild(a); a.select();
-    try { document.execCommand("copy"); toast("已复制"); } catch (e) { toast("复制失败，请长按上面的文字手动复制"); }
+    try { document.execCommand("copy"); toast("已复制"); } catch (e) { toast("复制失败，请长按文字手动复制"); }
     document.body.removeChild(a);
   }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { toast("已复制，可粘贴到表格"); }, fallback);
+  else fallback();
 }
 
 /* ---------- 设置 ---------- */
-function settings() {
-  var st = provState();
-  var html = '<h1>设置 AI 模型</h1><p class="sub">从上到下依次尝试，一家失败自动换下一家。至少填一个 Key。<br><b>网页版建议用 OpenRouter</b>，其他几家可能被浏览器的跨域限制挡住。</p>';
-  st.list.forEach(function (p, i) {
-    var ok = p.on !== false && st.keys[p.id] && p.model;
-    html += '<div class="card"><div class="top"><span class="rn">' + (ok ? "✅" : p.on === false ? "⛔️" : "⚪️") + " " + (i + 1) + ". " + esc(p.name) + '</span>'
-      + '<span class="tag ' + (p.id === "openrouter" ? "t-ok" : "t-maybe") + '">' + esc(p.cors) + '</span></div>'
-      + '<div class="meta">申请地址：' + esc(p.site) + '</div>'
-      + '<div class="row" style="margin-top:7px"><input type="password" id="k_' + p.id + '" placeholder="API Key" value="' + esc(st.keys[p.id] || "") + '"></div>'
-      + '<div class="row" style="margin-top:6px"><input type="text" id="m_' + p.id + '" placeholder="模型 ID" value="' + esc(p.model || "") + '">'
-      + '<button class="ghost" onclick="toggleProv(\'' + p.id + '\')">' + (p.on === false ? "启用" : "停用") + '</button>'
-      + '<button class="ghost" onclick="testOne(\'' + p.id + '\')">测试</button></div>'
-      + '<p class="dim" id="t_' + p.id + '"></p></div>';
-  });
-  html += '<p class="dim" id="toast"></p>';
-  render(html, [{ t: "返回", fn: function () { grab(); home(); } }, { t: "保存", cls: "red", fn: function () { grab(); toast("已保存"); } }]);
-  function grab() {
-    var s = provState();
-    s.list.forEach(function (p) {
-      var k = document.getElementById("k_" + p.id), m = document.getElementById("m_" + p.id);
-      if (k) s.keys[p.id] = k.value.trim();
-      if (m) p.model = m.value.trim();
-    });
-    provSave(s);
+var SETTAB = "ai";
+function pageSet() {
+  var sub = [["ai", "AI 模型"], ["lib", "品名库"], ["mem", "纠正记忆"]];
+  var h = head("") + '<div class="chips">' + sub.map(function (x) {
+    return '<button class="mchip' + (SETTAB === x[0] ? " on" : "") + '" onclick="setTab(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join("") + '</div>';
+  if (SETTAB === "ai") h += setAI();
+  else if (SETTAB === "lib") h += setLib(window.__q || "");
+  else h += setMem();
+  h += '<p class="dim" id="toast"></p>';
+  render(h, SETTAB === "ai" ? [{ t: "保存", cls: "red", fn: function () { grabKeys(); toast("已保存"); } }]
+    : SETTAB === "lib" ? [{ t: "导入品名", cls: "red", fn: importItems }] : []);
+  if (SETTAB === "lib") {
+    var qi = document.getElementById("q");
+    if (qi) qi.oninput = function () { window.__q = qi.value; clearTimeout(window.__qt); window.__qt = setTimeout(pageSet, 300); };
   }
-  window.__grab = grab;
+}
+function setTab(t) { SETTAB = t; draw(); }
+function setAI() {
+  var st = provState();
+  return '<p class="dim">从上到下依次尝试，一家失败自动换下一家。<br>绿色「网页可用」的才能在网页里调用；<b class="err">智谱和豆包不允许网页直接调用</b>（实测被浏览器拦截），只能在 Scriptable 里用。</p>'
+    + st.list.map(function (p, i) {
+      var ok = p.on !== false && st.keys[p.id] && p.model;
+      return '<div class="card"><div class="top"><span class="rn">' + (ok ? "✅" : p.on === false ? "⛔️" : "⚪️") + " " + (i + 1) + ". " + esc(p.name) + '</span>'
+        + '<span class="tag ' + (p.cors === "网页可用" ? "t-ok" : p.cors === "网页不可用" ? "t-no" : "t-maybe") + '">' + esc(p.cors) + '</span></div>'
+        + '<div class="meta">申请：' + esc(p.site) + '</div>'
+        + '<div class="row" style="margin-top:7px"><input type="password" id="k_' + p.id + '" placeholder="API Key" value="' + esc(st.keys[p.id] || "") + '"></div>'
+        + '<div class="row" style="margin-top:6px"><input type="text" id="m_' + p.id + '" placeholder="模型 ID" value="' + esc(p.model || "") + '" style="flex:2">'
+        + '<button class="ghost" onclick="toggleProv(\'' + p.id + '\')">' + (p.on === false ? "启用" : "停用") + '</button>'
+        + '<button class="ghost" onclick="testOne(\'' + p.id + '\')">测试</button></div>'
+        + '<p class="dim" id="t_' + p.id + '"></p></div>';
+    }).join("");
+}
+function grabKeys() {
+  var s = provState();
+  s.list.forEach(function (p) {
+    var k = document.getElementById("k_" + p.id), m = document.getElementById("m_" + p.id);
+    if (k) s.keys[p.id] = k.value.trim();
+    if (m) p.model = m.value.trim();
+  });
+  provSave(s);
 }
 function toggleProv(id) {
-  window.__grab && window.__grab();
-  var s = provState();
+  grabKeys(); var s = provState();
   s.list.forEach(function (p) { if (p.id === id) p.on = (p.on === false); });
-  provSave(s); settings();
+  provSave(s); draw();
 }
 function testOne(id) {
-  window.__grab && window.__grab();
+  grabKeys();
   var s = provState(), p = s.list.filter(function (x) { return x.id === id; })[0], out = document.getElementById("t_" + id);
   if (!s.keys[id]) { out.innerHTML = '<span class="err">还没填 Key</span>'; return; }
   if (!p.model) { out.innerHTML = '<span class="err">还没填模型 ID</span>'; return; }
@@ -662,25 +857,18 @@ function testOne(id) {
     })
     .catch(function (e) { out.innerHTML = '<span class="err">❌ ' + esc(String(e.message || e).slice(0, 200)) + '</span>'; });
 }
-
-/* ---------- 品名库 ---------- */
-function libPage(q) {
-  q = q || "";
+function setLib(q) {
   var list = q ? ITEMS.filter(function (v) { return v.name.indexOf(q) >= 0 || (v.cat || "").indexOf(q) >= 0; }) : ITEMS;
-  render('<h1>品名库 <span>' + ITEMS.length + ' 个</span></h1>'
-    + '<div class="row"><input type="text" id="q" placeholder="搜索品名或分类" value="' + esc(q) + '"></div>'
-    + '<p class="sub">' + (q ? '找到 ' + list.length + ' 个' : '显示前 200 个，可用搜索') + '</p>'
-    + list.slice(0, 200).map(function (v) { return '<div class="card"><div class="top"><span>' + esc(v.name) + '</span>'
+  return '<div class="row"><input type="text" id="q" placeholder="搜索品名或分类" value="' + esc(q) + '"></div>'
+    + '<p class="dim">共 ' + ITEMS.length + ' 个' + (q ? '，找到 ' + list.length + ' 个' : '，显示前 200 个') + '</p>'
+    + list.slice(0, 200).map(function (v) { return '<div class="card" style="padding:7px 11px"><div class="top"><span>' + esc(v.name) + '</span>'
       + '<span class="meta">' + esc([v.cat, v.unit].filter(Boolean).join(" · ")) + '</span></div></div>'; }).join("")
-    + '<hr><p class="sub">从二维火导出的清单里复制整列，粘贴到这里可追加</p><textarea id="imp" placeholder="每行一个品名；多栏会自动找「原料名称/品名、分类、单位、条形码」表头"></textarea>'
-    + '<p class="dim" id="toast"></p>',
-    [{ t: "返回", fn: home }, { t: "导入", fn: importItems }]);
-  var qi = document.getElementById("q");
-  qi.oninput = function () { var v = qi.value; clearTimeout(window.__qt); window.__qt = setTimeout(function () { libPage(v); }, 300); };
+    + '<hr><p class="dim">从二维火导出的清单里复制整列，粘到这里追加</p>'
+    + '<textarea id="imp" placeholder="每行一个品名；多栏会自动找「原料名称/品名、分类、单位、条形码」表头"></textarea>';
 }
 function importItems() {
-  var txt = document.getElementById("imp").value;
-  var lines = txt.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+  var el = document.getElementById("imp"); if (!el) return;
+  var lines = el.value.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
   if (!lines.length) { toast("没读到内容"); return; }
   var split = function (l) { return l.indexOf("\t") >= 0 ? l.split("\t") : l.split(/,|，/); };
   var hi = -1;
@@ -698,51 +886,34 @@ function importItems() {
   var have = {}; ITEMS.forEach(function (v) { have[v.name] = 1; });
   var n = 0; add.forEach(function (x) { if (x.name && !have[x.name]) { have[x.name] = 1; ITEMS.push(x); n++; } });
   if (n) lset(LS.items, ITEMS);
-  toast("新增 " + n + " 个，共 " + ITEMS.length + " 个");
+  draw(); toast("新增 " + n + " 个，共 " + ITEMS.length + " 个");
 }
-
-/* ---------- 纠正记忆 ---------- */
-function memPage() {
+function setMem() {
   var m = MEM.slice().sort(function (a, b) { return (b.count - a.count) || (b.at - a.at); });
-  render('<h1>纠正记忆 <span>' + MEM.length + ' 条</span></h1>'
-    + '<p class="sub">识别时会交给 AI，也直接用于对应。点「删」可移除。</p>'
+  return '<p class="dim">识别时交给 AI，也直接用于对应。共 ' + MEM.length + ' 条。</p>'
     + '<div class="card"><div class="row"><input type="text" id="mw" placeholder="认成" style="flex:1">'
     + '<input type="text" id="mr" placeholder="其实是" style="flex:1"><button class="ghost" onclick="addMem()">加一条</button></div></div>'
-    + m.map(function (x) { return '<div class="card"><div class="top"><span><s class="old">' + esc(x.wrong) + '</s> → <b class="new">' + esc(x.right) + '</b></span>'
-      + '<button class="ghost" style="padding:3px 10px;font-size:13px" onclick="delMem(' + JSON.stringify(x.wrong + "\u0001" + x.right).replace(/"/g, "&quot;") + ')">删</button></div>'
-      + '<div class="meta">' + esc(x.ctx || "") + ' · ×' + x.count + '</div></div>'; }).join("")
-    + '<p class="dim" id="toast"></p>', [{ t: "返回", fn: home }]);
+    + m.map(function (x) { return '<div class="card" style="padding:8px 11px"><div class="top"><span><s class="old">' + esc(x.wrong) + '</s> → <b class="new">' + esc(x.right) + '</b></span>'
+      + '<button class="ghost" style="padding:2px 9px;font-size:13px" onclick="delMem(' + JSON.stringify(x.wrong + "\u0001" + x.right).replace(/"/g, "&quot;") + ')">删</button></div>'
+      + '<div class="meta">' + esc(x.ctx || "") + ' · ×' + x.count + '</div></div>'; }).join("");
 }
 function addMem() {
   var w = document.getElementById("mw").value.trim(), r = document.getElementById("mr").value.trim();
   if (!w || !r) { toast("两栏都要填"); return; }
-  MEM.push({ wrong: w, right: r, ctx: "手动", count: 1, at: Date.now() }); lset(LS.mem, MEM); memPage();
+  MEM.push({ wrong: w, right: r, ctx: "手动", count: 1, at: Date.now() }); lset(LS.mem, MEM); draw();
 }
 function delMem(key) {
   var p = key.split("\u0001");
   MEM = MEM.filter(function (x) { return !(x.wrong === p[0] && x.right === p[1]); });
-  lset(LS.mem, MEM); memPage();
+  lset(LS.mem, MEM); draw();
 }
-
-/* ---------- 已存单据 ---------- */
-function ordersPage() {
-  var all = lget(LS.orders, []);
-  render('<h1>已存单据 <span>' + all.length + ' 张</span></h1><p class="sub">保存在这台手机里，最多保留 50 张。</p>'
-    + (all.length ? all.map(function (r, i) { return '<div class="card"><div class="top"><span class="rn">'
-      + esc([r.type || "单据", r.supplier, r.date].filter(Boolean).join(" · ")) + '</span>'
-      + '<button class="ghost" style="padding:3px 10px;font-size:13px" onclick="copyOrder(' + i + ')">复制</button></div>'
-      + '<div class="meta">' + r.rows.length + ' 行 · ' + new Date(r.at).toLocaleString("zh-CN") + '</div></div>'; }).join("")
-      : '<p class="dim">还没有。识别并确认后会存在这里。</p>')
-    + '<p class="dim" id="toast"></p>', [{ t: "返回", fn: home }]);
-}
-function copyOrder(i) { var all = lget(LS.orders, []); if (all[i]) copy(tsvOf(all[i])); }
 
 /* ---------- 启动 ---------- */
 MEM = lget(LS.mem, null) || SEED_MEM.map(function (x) { return { wrong: x[0], right: x[1], ctx: x[2], count: 1, at: Date.now() }; });
 ITEMS = lget(LS.items, null) || SEED_ITEMS.map(function (x) { return { name: x[0], cat: x[1], unit: x[2], code: x[3] }; });
 if (!lget(LS.mem, null)) lset(LS.mem, MEM);
 if (!lget(LS.items, null)) lset(LS.items, ITEMS);
-home();
+draw();
 
 </script>
 </body>
