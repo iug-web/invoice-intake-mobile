@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="算热量">
+<meta name="theme-color" content="#15803d">
+<title>拍照算热量</title>
+<style>
+  :root{--g:#15803d;--g2:#dcfce7;--g3:#f0fdf4;--bg:#f4f6f5;--card:#fff;--tx:#1f2937;--mu:#6b7280;--bd:#e5e7eb;--red:#dc2626;--amb:#b45309;--amb2:#fef3c7;
+        --p:#2563eb;--f:#d97706;--c:#7c3aed}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;padding-top:env(safe-area-inset-top);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif;background:var(--bg);color:var(--tx);padding-bottom:76px;font-size:15px}
+  header{padding:14px 16px 4px;display:flex;justify-content:space-between;align-items:baseline}
+  header h1{font-size:20px;margin:0}
+  .card{background:var(--card);border-radius:14px;margin:10px 12px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  h3{margin:0 0 10px;font-size:16px}
+  .btn{display:block;width:100%;border:none;border-radius:12px;padding:13px;font-size:16px;font-weight:600;background:var(--g);color:#fff;font-family:inherit}
+  .btn.sec{background:var(--g2);color:var(--g)}
+  .btn.ghost{background:#f3f4f6;color:var(--tx);font-weight:500}
+  .btn.sm{padding:8px 12px;font-size:14px;width:auto;display:inline-block}
+  .btn:disabled{opacity:.5}
+  .row{display:flex;gap:8px;align-items:center}
+  .row>.grow{flex:1}
+  .mu{color:var(--mu);font-size:13px}
+  .err{color:var(--red);font-size:14px}
+  input,select,textarea{font-family:inherit;font-size:15px;padding:9px 10px;border:1px solid var(--bd);border-radius:9px;background:#fff;width:100%;color:var(--tx)}
+  textarea{resize:vertical;min-height:44px}
+  label.l{display:block;font-size:13px;color:var(--mu);margin:10px 0 4px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{border:1px solid var(--bd);background:#fff;border-radius:16px;padding:6px 12px;font-size:14px;font-family:inherit;color:var(--tx)}
+  .chip.on{background:var(--g);border-color:var(--g);color:#fff}
+  .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .thumbs div{position:relative}
+  .thumbs img{width:84px;height:84px;object-fit:cover;border-radius:10px;display:block}
+  .thumbs button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:none;background:#111;color:#fff;font-size:13px;line-height:22px;padding:0}
+  .add{width:84px;height:84px;border:2px dashed var(--bd);border-radius:10px;background:#fafafa;font-size:26px;color:var(--mu)}
+  .stats{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:6px;text-align:center}
+  .stats div{background:var(--bg);border-radius:10px;padding:8px 2px}
+  .stats b{display:block;font-size:18px}
+  .stats span{font-size:11px;color:var(--mu)}
+  .stats .k b{color:var(--g);font-size:20px}
+  .range{font-size:12px;color:var(--mu);text-align:center;margin-top:6px}
+  .item{border-top:1px solid var(--bd);padding:10px 0}
+  .item:first-of-type{border-top:none}
+  .item .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+  .item .n{font-weight:600}
+  .item .s{font-size:12px;color:var(--mu);margin-top:3px;line-height:1.5}
+  .item .w{display:flex;align-items:center;gap:4px;white-space:nowrap}
+  .item .w input{width:68px;padding:5px;text-align:right}
+  .item .x{border:none;background:none;color:var(--mu);font-size:18px;padding:0 0 0 6px}
+  .tag{font-size:11px;padding:1px 6px;border-radius:6px;margin-left:4px;font-weight:500;white-space:nowrap}
+  .t-高{background:var(--g2);color:var(--g)} .t-中{background:var(--amb2);color:var(--amb)} .t-低{background:#fee2e2;color:var(--red)}
+  .t-src{background:#e0e7ff;color:#3730a3}
+  .t-hid{background:#f3e8ff;color:#6b21a8}
+  .note{background:var(--g3);border-left:4px solid var(--g);padding:9px 10px;border-radius:8px;font-size:14px;margin-top:8px;line-height:1.55}
+  .note.q{background:#fffbeb;border-color:#f59e0b}
+  .tip{font-size:12px;color:var(--mu);margin-top:6px;line-height:1.5}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--bd);display:flex;z-index:5;padding-bottom:env(safe-area-inset-bottom)}
+  nav button{flex:1;border:none;background:none;padding:9px 0 12px;font-size:12px;color:var(--mu);font-family:inherit}
+  nav button b{display:block;font-size:20px;font-weight:400}
+  nav button.on{color:var(--g);font-weight:600}
+  .page{display:none}.page.on{display:block}
+  .bar{height:8px;background:var(--bd);border-radius:4px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:4px}
+  .mac{display:grid;grid-template-columns:52px 1fr 92px;gap:8px;align-items:center;font-size:13px;margin-top:8px}
+  .mac span:last-child{text-align:right;color:var(--mu)}
+  .daynav{display:flex;justify-content:space-between;align-items:center}
+  .daynav button{border:none;background:#f3f4f6;border-radius:8px;padding:6px 12px;font-size:16px}
+  .meal{display:flex;gap:10px;align-items:center;border-top:1px solid var(--bd);padding:10px 0}
+  .meal:first-child{border-top:none}
+  .meal img{width:54px;height:54px;border-radius:9px;object-fit:cover;flex:none}
+  .meal .ph{width:54px;height:54px;border-radius:9px;background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:24px;flex:none}
+  .meal .del{border:none;background:none;color:var(--mu);font-size:13px;padding:4px}
+  .meal .del.arm{color:var(--red);font-weight:600}
+  .week{display:flex;align-items:flex-end;gap:6px;height:130px;margin-top:6px;position:relative}
+  .week .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .week .col i{display:block;width:70%;background:var(--g);border-radius:4px 4px 0 0;min-height:2px}
+  .week .col i.over{background:#f59e0b}
+  .week .col span{font-size:11px;color:var(--mu);margin-top:4px}
+  .week .col em{font-size:10px;color:var(--mu);font-style:normal}
+  .goal-line{position:absolute;left:0;right:0;border-top:1px dashed var(--red);pointer-events:none}
+  .hidden{display:none!important}
+  .seg{display:flex;background:#f3f4f6;border-radius:10px;padding:3px}
+  .seg button{flex:1;border:none;background:none;padding:7px;border-radius:8px;font-size:14px;font-family:inherit;color:var(--tx)}
+  .seg button.on{background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.1);font-weight:600}
+  .ov{position:fixed;inset:0;background:var(--bg);z-index:20;overflow:auto;padding:calc(30px + env(safe-area-inset-top)) 16px 30px}
+  .ov h2{text-align:center;margin:10px 0 20px}
+  .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .pgrid button{border:none;background:#fff;border-radius:16px;padding:16px 4px;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,.08);color:var(--tx)}
+  .pgrid button b{display:block;font-size:40px;margin-bottom:6px}
+  .pgrid button span{font-size:12px;color:var(--mu)}
+  .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:280px;margin:16px auto}
+  .pinpad button{border:none;background:#fff;border-radius:14px;padding:16px;font-size:22px;font-family:inherit}
+  .pindots{text-align:center;font-size:28px;letter-spacing:10px;height:36px}
+  .who{border:none;background:#fff;border-radius:18px;padding:4px 10px 4px 6px;font-size:14px;font-family:inherit;box-shadow:0 1px 2px rgba(0,0,0,.08);color:var(--tx)}
+  .avs{display:flex;gap:6px;flex-wrap:wrap}
+  .avs button{font-size:24px;border:2px solid transparent;background:#f3f4f6;border-radius:12px;width:44px;height:44px;padding:0}
+  .avs button.on{border-color:var(--g);background:var(--g2)}
+  .modes{display:grid;gap:8px}
+  .modes button{text-align:left;border:2px solid var(--bd);background:#fff;border-radius:12px;padding:10px 12px;font-family:inherit;color:var(--tx)}
+  .modes button.on{border-color:var(--g);background:var(--g3)}
+  .modes button b{font-size:15px}.modes button div{font-size:12px;color:var(--mu);margin-top:2px}
+  .rw{display:flex;justify-content:space-around;text-align:center;margin:4px 0 10px}
+  .rw b{display:block;font-size:22px}.rw span{font-size:12px;color:var(--mu)}
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .badges span{font-size:26px;filter:grayscale(1);opacity:.35}
+  .badges span.got{filter:none;opacity:1}
+  .task{display:flex;align-items:center;gap:10px;border:2px solid var(--bd);border-radius:12px;padding:10px 12px;margin-top:8px;background:#fff;width:100%;font-family:inherit;font-size:15px;color:var(--tx);text-align:left}
+  .task.on{border-color:#f59e0b;background:#fffbeb}
+  .task .ic{font-size:24px}.task .st{margin-left:auto;font-size:22px}
+  #cele{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:30;display:none;align-items:center;justify-content:center;overflow:hidden}
+  #cele.on{display:flex}
+  #cele .box{background:#fff;border-radius:22px;padding:26px 22px;width:84%;max-width:340px;text-align:center;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+  #cele .big{font-size:72px;line-height:1}
+  #cele h2{margin:10px 0 6px}
+  #cele p{color:var(--mu);line-height:1.6;margin:0 0 16px;white-space:pre-line}
+  #cele .cf{position:absolute;top:-40px;font-size:24px;animation:fall linear forwards;pointer-events:none}
+  @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  @keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+  .modeTag{font-size:12px;background:var(--g2);color:var(--g);border-radius:8px;padding:2px 8px;margin-left:6px;font-weight:500}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#111;color:#fff;padding:9px 16px;border-radius:20px;font-size:14px;z-index:9;opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.on{opacity:.9}
+</style>
+</head>
+<body>
+<header><h1>🍱 拍照算热量</h1><button class="who" id="whoBtn"></button><span id="syncState" class="hidden"></span></header>
+<div style="padding:0 12px"><div class="chips" id="aiBar" style="flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;white-space:nowrap"></div></div>
+
+<!-- ================= 识别 ================= -->
+<section class="page on" id="p-scan">
+  <div class="card" id="unavail" style="display:none"><div class="err" id="unavailTxt"></div></div>
+
+  <div class="card" id="inputCard">
+    <h3>1. 拍照</h3>
+    <div class="mu">可加多张：菜品整体 + 包装标签/营养成分表，结果更准</div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn grow" id="camBtn">📷 拍照</button>
+      <button class="btn sec grow" id="albBtn">🖼️ 相册</button>
+    </div>
+    <div class="thumbs" id="thumbs"></div>
+    <input type="file" id="cam" accept="image/*" capture="environment" hidden>
+    <input type="file" id="file" accept="image/*" multiple hidden>
+
+    <label class="l">2. 这是哪一餐</label>
+    <div class="chips" id="mealType"></div>
+
+    <label class="l">3. 实际吃了多少</label>
+    <div class="chips" id="portion"></div>
+
+    <label class="l">4. 补充说明（可选）</label>
+    <textarea id="hint" rows="2" placeholder="例：做成寿喜烧，加了2个生鸡蛋；米饭是糙米；少油"></textarea>
+
+    <button class="btn" id="goBtn" style="margin-top:12px" disabled>开始分析</button>
+    <div id="status" class="mu" style="margin-top:8px"></div>
+  </div>
+
+  <div id="result"></div>
+</section>
+
+<!-- ================= 今日 ================= -->
+<section class="page" id="p-day">
+  <div class="card">
+    <div class="daynav"><button id="prevDay">‹</button><b id="dayLabel"></b><button id="nextDay">›</button></div>
+    <div style="margin-top:12px" id="dayStats"></div>
+    <div id="dayMacros"></div>
+    <div class="tip" id="dayLeft"></div>
+  </div>
+  <div class="card" id="rewardCard"></div>
+  <div class="card hidden" id="kidCard"></div>
+  <div class="card hidden" id="weightCard"></div>
+  <div class="card"><h3>记录</h3><div id="meals"></div>
+    <button class="btn ghost" style="margin-top:10px" id="manualBtn">＋ 不拍照，手动记一餐</button>
+  </div>
+  <div class="card" id="weekCard"><h3>近 7 天热量</h3><div class="week" id="week"></div><div class="mu" style="margin-top:6px">红色虚线 = 每日目标</div></div>
+</section>
+
+<!-- ================= 菜单 ================= -->
+<section class="page" id="p-plan">
+  <div class="card">
+    <h3>买菜清单 → 分配餐食</h3>
+    <div class="mu">拍购物小票或食材，或直接输入清单</div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn grow" id="pCamBtn">📷 拍小票</button>
+      <button class="btn sec grow" id="pAlbBtn">🖼️ 相册</button>
+    </div>
+    <div class="thumbs" id="pThumbs"></div>
+    <input type="file" id="pCam" accept="image/*" capture="environment" hidden>
+    <input type="file" id="pFile" accept="image/*" multiple hidden>
+    <label class="l">或输入清单</label>
+    <textarea id="pList" rows="3" placeholder="例：黑毛和牛肩肉 321g、白菜半颗、豆腐2盒、鸡蛋10个、三文鱼2块、西兰花1颗"></textarea>
+    <label class="l">几个人吃</label><div class="chips" id="pPeople"></div>
+    <label class="l">每天几餐</label><div class="chips" id="pMeals"></div>
+    <label class="l">安排几天</label><div class="chips" id="pDays"></div>
+    <label class="l">家里已有 / 口味偏好（可选）</label>
+    <textarea id="pPref" rows="2" placeholder="例：家里有米、调料齐全；孩子不吃辣；想少油"></textarea>
+    <button class="btn" style="margin-top:12px" id="planGo">生成菜单</button>
+    <div id="pStatus" class="mu" style="margin-top:8px"></div>
+  </div>
+  <div id="planOut"></div>
+</section>
+
+<!-- ================= 设置 ================= -->
+<section class="page" id="p-set">
+  <div class="card" id="profCard"></div>
+  <div class="card">
+    <h3>每日目标 <button class="btn sec sm" id="autoTgt" style="float:right;padding:4px 10px;font-size:13px">按资料自动计算</button></h3>
+    <label class="l">热量（kcal）</label><input type="number" id="sKcal" inputmode="numeric">
+    <div class="row" style="margin-top:4px">
+      <div class="grow"><label class="l">蛋白质 %</label><input type="number" id="sP" inputmode="numeric"></div>
+      <div class="grow"><label class="l">脂肪 %</label><input type="number" id="sF" inputmode="numeric"></div>
+      <div class="grow"><label class="l">碳水 %</label><input type="number" id="sC" inputmode="numeric"></div>
+    </div>
+    <label class="l">钠上限（mg）</label><input type="number" id="sNa" inputmode="numeric">
+    <div class="tip">一般成人参考：蛋白质 15–20%、脂肪 20–30%、碳水 50–60%，钠 2000 mg 以内。具体目标请结合自己情况。</div>
+  </div>
+  <div class="card">
+    <h3>AI 模型</h3>
+    <div class="mu">点选要用的 AI，每个填自己的 API Key（只保存在本机）。顶部也可一键切换。</div>
+    <div class="chips" id="provChips" style="margin-top:10px"></div>
+    <div id="provForm"></div>
+  </div>
+  <button class="btn" style="margin:4px 12px;width:calc(100% - 24px)" id="saveSet">保存设置</button>
+  <div class="card mu" style="line-height:1.6">
+    <h3 style="color:var(--tx)">数据备份</h3>
+    记录只保存在这台手机的浏览器里。换手机或清除 Safari 数据前，请先导出备份。
+    <div class="row" style="margin-top:10px">
+      <button class="btn sec grow" id="expBtn">导出备份</button>
+      <button class="btn ghost grow" id="impBtn">导入备份</button>
+    </div>
+    <input type="file" id="impFile" accept=".json,application/json" hidden>
+  </div>
+</section>
+
+<nav>
+  <button class="on" data-p="scan"><b>📷</b>识别</button>
+  <button data-p="day"><b>📊</b>记录</button>
+  <button data-p="plan"><b>📝</b>菜单</button>
+  <button data-p="set"><b>⚙️</b>设置</button>
+</nav>
+<div class="toast" id="toast"></div>
+<div class="ov hidden" id="login"></div>
+<div id="cele"><div class="box"><div class="big" id="ceBig"></div><h2 id="ceT"></h2><p id="ceM"></p><button class="btn" id="ceOk">太棒了！</button></div></div>
+
+<script>
+/* =========================================================
+   基础
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const r1 = n => Math.round((+n || 0) * 10) / 10;
+const r0 = n => Math.round(+n || 0);
+const pad = n => String(n).padStart(2, '0');
+const dateKey = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('on'),1800); }
+
+const MEALS = ['早餐','午餐','晚餐','加餐'];
+const PORTIONS = [['全部',1],['3/4',.75],['一半',.5],['1/3',1/3],['1/4',.25],['自定',0]];
+const DEFAULT_SET = {kcal:1800,p:20,f:30,c:50,na:2000,tier:'default'};
+
+let sample = null, db = null, uid = null;
+let settings = {...DEFAULT_SET};
+let photos = [];            // [{blob, url}]
+let mealType = guessMeal(), portion = 1;
+let current = null;         // 当前分析结果
+let viewDate = new Date();
+const dayCache = {};        // dateKey -> {meals:[]}
+
+function guessMeal(){ const h=new Date().getHours(); return h<10?'早餐':h<15?'午餐':h<21?'晚餐':'加餐'; }
+
+/* =========================================================
+   存储：优先账号数据库（跨设备），否则本机
+   ========================================================= */
+const GLOBAL_KEYS = ['ai','profiles','cur'];
+let curPid = null;
+const pk = k => GLOBAL_KEYS.includes(k) || !curPid ? 'fa_' + k : 'fa_' + curPid + '_' + k;
+const local = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(pk(k))); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(pk(k), JSON.stringify(v)); }catch(e){ toast('手机存储空间不足，请导出备份后删除旧记录'); } }
+};
+async function loadDoc(name){
+  if (db && uid){
+    try{ const s = await db.doc('data/users/'+uid+'/'+name).get(); return s.exists ? s.data() : null; }
+    catch(e){ return local.get(name); }
+  }
+  return local.get(name);
+}
+async function saveDoc(name, data){
+  local.set(name, data);
+  if (db && uid){
+    try{ await db.doc('data/users/'+uid+'/'+name).set(data); return true; }
+    catch(e){ if (e && e.code==='quota_exceeded') toast('存储空间已满，请删除一些旧记录'); return false; }
+  }
+  return true;
+}
+async function getDay(k){
+  if (!dayCache[k]){ const d = await loadDoc('day_'+k); dayCache[k] = (d && Array.isArray(d.meals)) ? {meals:[...d.meals]} : {meals:[]}; }
+  return dayCache[k];
+}
+async function putDay(k){ return saveDoc('day_'+k, {meals: dayCache[k].meals}); }
+
+/* =========================================================
+   初始化
+   ========================================================= */
+renderChips(); renderThumbs(); bindNav();
+
+(async () => {
+  await null;
+  ai = {...ai, ...(local.get('ai') || {})};
+  for (const k in PROVIDERS) ai.cfg[k] = {key:'', model:PROVIDERS[k].model, url:PROVIDERS[k].url || '', ...(ai.cfg[k] || {})};
+  sample = { json: callAIJson };
+  renderAIBar(); renderProvForm();
+  initProfiles();
+  updateGo();
+})();
+
+function bindNav(){
+  document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x===b));
+    document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', p.id==='p-'+b.dataset.p));
+    if (b.dataset.p==='day') renderDay();
+    if (b.dataset.p==='plan') loadPlan();
+    window.scrollTo(0,0);
+  });
+}
+
+/* =========================================================
+   输入区
+   ========================================================= */
+function renderChips(){
+  $('mealType').innerHTML = MEALS.map(m => `<button class="chip ${m===mealType?'on':''}" data-v="${m}">${m}</button>`).join('');
+  $('mealType').querySelectorAll('button').forEach(b => b.onclick = () => { mealType=b.dataset.v; renderChips(); });
+  const isCustom = !PORTIONS.some(p => p[1]===portion && p[1]!==0);
+  $('portion').innerHTML = PORTIONS.map(([t,v]) => {
+    const on = v===0 ? isCustom : v===portion;
+    return `<button class="chip ${on?'on':''}" data-v="${v}">${v===0&&isCustom?'自定 '+Math.round(portion*100)+'%':t}</button>`;
+  }).join('') + `<div class="${isCustom?'':'hidden'}" style="width:100%;margin-top:6px"><div class="row"><input type="number" id="pctIn" inputmode="numeric" value="${Math.round(portion*100)}" style="width:90px"><span class="mu">% （例：3人分一盒就填 33）</span></div></div>`;
+  $('portion').querySelectorAll('button').forEach(b => b.onclick = () => {
+    const v = +b.dataset.v; portion = v===0 ? (isCustom?portion:0.33) : v; renderChips();
+  });
+  const pi = $('pctIn'); if (pi) pi.onchange = () => { portion = Math.min(3, Math.max(0.01, (+pi.value||100)/100)); renderChips(); };
+}
+
+function renderThumbs(){
+  $('thumbs').innerHTML = photos.map((p,i) => `<div><img src="${p.url}" alt=""><button data-i="${i}">✕</button></div>`).join('')
+    + '';
+  $('thumbs').querySelectorAll('div button').forEach(b => b.onclick = () => { URL.revokeObjectURL(photos[+b.dataset.i].url); photos.splice(+b.dataset.i,1); renderThumbs(); updateGo(); });
+  $('camBtn').disabled = $('albBtn').disabled = photos.length >= 4;
+}
+$('camBtn').onclick = () => $('cam').click();
+$('albBtn').onclick = () => $('file').click();
+const onPick = async e => {
+  const files = [...e.target.files].slice(0, 4 - photos.length); e.target.value='';
+  for (const f of files){
+    try{ const blob = await shrink(f, 1600, .86); photos.push({blob, url: URL.createObjectURL(blob)}); }
+    catch(err){ toast('有一张图片无法读取'); }
+  }
+  renderThumbs(); updateGo();
+};
+$('file').onchange = onPick; $('cam').onchange = onPick;
+function loadImg(src){ return new Promise((ok,no)=>{ const im=new Image(); im.onload=()=>ok(im); im.onerror=no; im.src=src; }); }
+async function shrink(file, max, q){
+  const url = URL.createObjectURL(file);
+  try{
+    const im = await loadImg(url);
+    const k = Math.min(1, max/Math.max(im.naturalWidth, im.naturalHeight));
+    const c = document.createElement('canvas'); c.width=Math.round(im.naturalWidth*k); c.height=Math.round(im.naturalHeight*k);
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    return await new Promise(ok => c.toBlob(ok, 'image/jpeg', q));
+  } finally { URL.revokeObjectURL(url); }
+}
+async function thumbOf(blob){
+  const url = URL.createObjectURL(blob);
+  try{
+    const im = await loadImg(url); const s=120, c=document.createElement('canvas'); c.width=c.height=s;
+    const m=Math.min(im.naturalWidth,im.naturalHeight);
+    c.getContext('2d').drawImage(im,(im.naturalWidth-m)/2,(im.naturalHeight-m)/2,m,m,0,0,s,s);
+    return c.toDataURL('image/jpeg',.7);
+  } finally { URL.revokeObjectURL(url); }
+}
+function updateGo(){ $('goBtn').disabled = !sample || photos.length===0; if ($('planGo')) $('planGo').disabled = !sample; }
+
+/* =========================================================
+   AI 分析
+   ========================================================= */
+const SCHEMA = `{
+  "is_food": true,
+  "meal_name": "一句话概括这餐，如：黑毛和牛寿喜烧（生肉）",
+  "items": [
+    {
+      "name": "具体食物名（中文简体），注明生/熟和做法",
+      "weight_g": 数字，本次照片中的全部重量,
+      "weight_source": "标签" | "估算",
+      "per100g": {"kcal":数字,"protein":数字,"fat":数字,"carbs":数字,"fiber":数字,"sodium_mg":数字},
+      "data_source": "所用成分表，如：日本食品标准成分表 / 中国食物成分表 / 包装营养标签",
+      "confidence": "高" | "中" | "低",
+      "hidden": false
+    }
+  ],
+  "kcal_range": [下限, 上限],
+  "notes": "关键判断依据，1-2句（如：标签净重321g；按肩肉带脂计算）",
+  "questions": ["如有会明显影响结果的不确定点，用一句话问用户；没有则空数组"],
+  "advice": "针对这一餐的一句具体建议"
+}`;
+
+function buildPrompt(extra){
+  return `你是注册营养师，擅长从照片估算食物营养。用户住在日本，常见日本超市商品与中式家常菜。${modeHint()}请分析附带的 ${photos.length} 张照片（可能是同一餐的不同角度或包装标签）。
+
+【规则】
+1. 逐项拆分：每种食物单独一项（米饭、各道菜、饮料分开）。
+2. 重量优先级：包装上的净重/内容量（正味量、内容量、g）＞ 营养成分表上的份量 ＞ 根据餐具和堆叠高度目测。用了标签就把 weight_source 设为"标签"。多张照片是同一份食物时不要重复计算。
+3. 营养数据优先级：包装上的营养成分表（栄養成分表示）＞ 日本食品标准成分表（日本商品、和牛等）＞ 中国食物成分表（中式菜）。per100g 必须是该食物在照片所示状态（生或熟）下每100g的值。
+4. 隐藏热量：炒菜、油炸、拌酱的食物，把可估计的烹调油、酱汁、沙拉酱单独列为一项，并设 "hidden": true。生食材（如生肉、生菜）不要添加隐藏项，除非用户说明了做法。
+5. 照片里是供多人份的整盒/整锅时，weight_g 仍填全部重量；用户实际吃的比例由程序另算，你不要自行折算。
+6. 看不清或不确定的，confidence 设为"低"，并在 questions 里问一句关键问题（最多2个）。
+7. 如果照片中没有可食用的食物，只返回 {"is_food": false, "reason": "原因"}。
+${$('hint').value.trim() ? '\n【用户补充说明】\n' + $('hint').value.trim() + '\n（请按说明调整，例如做法、加了什么、哪些没吃。）' : ''}
+${extra || ''}
+【输出】只输出一个 JSON 对象，不要任何其他文字，结构如下：
+${SCHEMA}`;
+}
+
+let ctl = null;
+$('goBtn').onclick = () => runAnalysis();
+
+async function runAnalysis(extra){
+  if (!sample || !photos.length) return;
+  ctl?.abort(); ctl = new AbortController();
+  const btn = $('goBtn'); btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>分析中，约 10–40 秒…';
+  $('status').innerHTML = `<button class="btn ghost sm" id="stopBtn">停止</button>`;
+  $('stopBtn').onclick = () => ctl.abort();
+  if (!extra) $('result').innerHTML = '';
+  try{
+    const data = await sample.json(buildPrompt(extra), {
+      images: photos.map(p => p.blob), modelTier: settings.tier, signal: ctl.signal, cache: extra ? false : undefined
+    });
+    if (!data || data.is_food === false){
+      $('result').innerHTML = `<div class="card err">没有识别到食物${data && data.reason ? '：' + esc(data.reason) : ''}。请拍清楚一点再试。</div>`;
+      return;
+    }
+    current = normalize(data);
+    current.portion = portion;
+    renderResult();
+    setTimeout(() => $('result').scrollIntoView({behavior:'smooth', block:'start'}), 50);
+  } catch(e){
+    if (e && e.code === 'cancelled'){ $('status').textContent = '已停止'; return; }
+    $('result').innerHTML = `<div class="card err">${esc(errText(e))}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = current ? '重新分析' : '开始分析';
+    if ($('stopBtn')) $('status').textContent = '';
+  }
+}
+function errText(e){
+  const c = e && e.code;
+  return ({
+    not_granted:'你没有允许这个页面使用 Claude，所以无法分析。刷新页面后可重新授权。',
+    rate_limited:'请求太频繁或已达到使用额度，请稍后再试。',
+    session_expired:'登录已过期，请重新登录 Claude。',
+    image_rejected:'图片无法识别（格式或尺寸问题），请换一张。',
+    images_unavailable:'当前环境无法发送图片，请更新 Claude App。',
+    invalid_json:'AI 返回的格式有误，请再试一次，或换一个 AI。',
+    no_key:'当前 AI 还没有填 API Key，请到「设置」填写，或在顶部换一个 AI。',
+    refused:'AI 无法分析这张图片，请换一张食物照片。',
+    sampling_disabled:'你的账号当前无法使用此功能。'
+  })[c] || (e && e.message ? e.message : '分析失败，请稍后重试。');
+}
+function num(v){ v = +v; return isFinite(v) && v >= 0 ? v : 0; }
+function normalize(d){
+  const items = (Array.isArray(d.items) ? d.items : []).map(i => {
+    const p = i.per100g || {};
+    const w = num(i.weight_g) || 100;
+    return { name: String(i.name || '未知食物'), w, w0: w, src: i.weight_source === '标签' ? '标签' : '估算',
+      per: {kcal:num(p.kcal), p:num(p.protein), f:num(p.fat), c:num(p.carbs), fib:num(p.fiber), na:num(p.sodium_mg)},
+      ds: String(i.data_source || ''), conf: ['高','中','低'].includes(i.confidence) ? i.confidence : '中', hidden: !!i.hidden, on: true };
+  });
+  const rg = Array.isArray(d.kcal_range) && d.kcal_range.length === 2 ? d.kcal_range.map(num) : null;
+  return { name: String(d.meal_name || ''), items, range: rg, notes: String(d.notes || ''),
+           questions: (Array.isArray(d.questions) ? d.questions : []).map(String).filter(Boolean).slice(0,2),
+           advice: String(d.advice || '') };
+}
+function itemNut(i){ const k = i.w / 100; return {kcal:i.per.kcal*k, p:i.per.p*k, f:i.per.f*k, c:i.per.c*k, fib:i.per.fib*k, na:i.per.na*k}; }
+function sumNut(items, ratio){
+  const t = {kcal:0,p:0,f:0,c:0,fib:0,na:0};
+  items.filter(i => i.on !== false).forEach(i => { const n = itemNut(i); for (const k in t) t[k] += n[k]; });
+  for (const k in t) t[k] *= ratio; return t;
+}
+function statsHTML(t){
+  return `<div class="stats"><div class="k"><b>${r0(t.kcal)}</b><span>热量 kcal</span></div>
+    <div><b style="color:var(--p)">${r1(t.p)}</b><span>蛋白质 g</span></div>
+    <div><b style="color:var(--f)">${r1(t.f)}</b><span>脂肪 g</span></div>
+    <div><b style="color:var(--c)">${r1(t.c)}</b><span>碳水 g</span></div></div>`;
+}
+
+function renderResult(){
+  const c = current, ratio = c.portion;
+  const t = sumNut(c.items, ratio), full = sumNut(c.items, 1);
+  const pctTxt = ratio === 1 ? '' : `（照片全部 ${r0(full.kcal)} kcal × 你吃的 ${Math.round(ratio*100)}%）`;
+  const rangeTxt = c.range && c.range[1] > 0 ? `合理范围约 ${r0(c.range[0]*ratio)}–${r0(c.range[1]*ratio)} kcal` : '';
+  $('result').innerHTML = `
+  <div class="card">
+    <h3>${esc(c.name || '本餐结果')}</h3>
+    ${statsHTML(t)}
+    <div class="range">${rangeTxt} ${pctTxt}</div>
+    <div class="range">膳食纤维 ${r1(t.fib)} g · 钠 ${r0(t.na)} mg（约盐 ${r1(t.na*2.54/1000)} g）</div>
+    ${c.notes ? `<div class="tip">📌 ${esc(c.notes)}</div>` : ''}
+    ${c.advice ? `<div class="note">💡 ${esc(c.advice)}</div>` : ''}
+    ${c.questions.length ? `<div class="note q">❓ ${c.questions.map(esc).join('<br>❓ ')}<div class="tip">在下方「纠正」里回答，结果会更准。</div></div>` : ''}
+  </div>
+
+  <div class="card">
+    <h3>分项明细 <span class="mu" style="font-weight:400">· 改重量会自动重算</span></h3>
+    ${c.items.map((i,k) => { const n = itemNut(i); return `
+      <div class="item" style="${i.on?'':'opacity:.4'}">
+        <div class="top">
+          <div class="grow">
+            <div class="n">${esc(i.name)}<span class="tag t-${i.conf}">${i.conf}</span>${i.src==='标签'?'<span class="tag t-src">标签重量</span>':''}${i.hidden?'<span class="tag t-hid">隐藏热量</span>':''}</div>
+            <div class="s">${r0(n.kcal)} kcal · 蛋白 ${r1(n.p)} · 脂肪 ${r1(n.f)} · 碳水 ${r1(n.c)}<br>每100g ${r0(i.per.kcal)} kcal${i.ds?' · '+esc(i.ds):''}</div>
+          </div>
+          <div class="w"><input type="number" inputmode="decimal" value="${r0(i.w)}" data-k="${k}"> g<button class="x" data-t="${k}" title="不算这项">${i.on?'✕':'↺'}</button></div>
+        </div>
+      </div>`; }).join('')}
+    <div class="row" style="margin-top:10px">
+      <input class="grow" id="addName" placeholder="漏了什么？如：味噌汤一碗">
+      <button class="btn sec sm" id="addItem">添加</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>纠正 AI</h3>
+    <textarea id="fix" rows="2" placeholder="例：这不是牛肉是猪肩肉；米饭只有半碗；酱汁我没喝"></textarea>
+    <button class="btn ghost" style="margin-top:8px" id="fixBtn">按纠正重新分析</button>
+  </div>
+
+  <div class="card">
+    <div class="mu" style="margin-bottom:8px">记为「${mealType}」· 吃了 ${Math.round(ratio*100)}% · ${r0(t.kcal)} kcal</div>
+    <button class="btn" id="saveMeal">✅ 记入今天</button>
+  </div>`;
+
+  $('result').querySelectorAll('input[data-k]').forEach(inp => inp.onchange = () => {
+    c.items[+inp.dataset.k].w = Math.max(0, +inp.value || 0); renderResult();
+  });
+  $('result').querySelectorAll('button[data-t]').forEach(b => b.onclick = () => {
+    const it = c.items[+b.dataset.t]; it.on = !it.on; renderResult();
+  });
+  $('addItem').onclick = addMissingItem;
+  $('fixBtn').onclick = () => {
+    const fix = $('fix').value.trim(); if (!fix) { toast('先写下要纠正的内容'); return; }
+    const prev = JSON.stringify({items: c.items.map(i => ({name:i.name, weight_g:i.w, per100g:i.per}))});
+    runAnalysis(`\n【上一次分析结果】\n${prev}\n【用户纠正】\n${fix}\n请根据纠正重新给出完整结果。`);
+  };
+  $('saveMeal').onclick = saveCurrentMeal;
+}
+
+async function addMissingItem(){
+  const name = $('addName').value.trim(); if (!name || !sample) return;
+  const b = $('addItem'); b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+  try{
+    const r = await lookupFood(name);
+    current.items.push(...r); renderResult();
+  } catch(e){ if (e.code !== 'cancelled') toast(errText(e)); }
+  finally { if ($('addItem')){ $('addItem').disabled = false; $('addItem').textContent = '添加'; } }
+}
+async function lookupFood(text){
+  const d = await sample.json(`你是注册营养师。用户描述了吃的东西：「${text}」。
+按常见份量估算重量，用日本食品标准成分表或中国食物成分表给出每100g营养。可能包含多种食物，请拆开。
+只输出 JSON：{"items":[{"name":"中文简体名","weight_g":数字,"per100g":{"kcal":数字,"protein":数字,"fat":数字,"carbs":数字,"fiber":数字,"sodium_mg":数字},"data_source":"来源","confidence":"高|中|低"}]}`,
+    {modelTier:'quick'});
+  const r = normalize({items: d && d.items}).items;
+  if (!r.length) throw {code:'invalid_json'};
+  return r;
+}
+
+async function saveCurrentMeal(){
+  const c = current; const t = sumNut(c.items, c.portion);
+  const b = $('saveMeal'); b.disabled = true;
+  let thumb = ''; try{ thumb = await thumbOf(photos[0].blob); }catch(e){}
+  const k = dateKey(new Date()); const day = await getDay(k);
+  day.meals.push({ id: Date.now().toString(36), ts: Date.now(), type: mealType, name: c.name,
+    ratio: c.portion, thumb, items: c.items.filter(i=>i.on).map(i => ({n:i.name, w:r0(i.w)})),
+    t: {kcal:r0(t.kcal), p:r1(t.p), f:r1(t.f), c:r1(t.c), fib:r1(t.fib), na:r0(t.na)} });
+  await putDay(k);
+  toast('已记入今天');
+  photos.forEach(p => URL.revokeObjectURL(p.url)); photos = []; current = null; portion = 1; $('hint').value='';
+  renderThumbs(); renderChips(); updateGo(); $('result').innerHTML = ''; $('goBtn').textContent='开始分析';
+  viewDate = new Date();
+  document.querySelector('nav button[data-p="day"]').click();
+}
+
+/* =========================================================
+   记录页
+   ========================================================= */
+$('prevDay').onclick = () => { viewDate = new Date(viewDate.getTime() - 864e5); renderDay(); };
+$('nextDay').onclick = () => { if (dateKey(viewDate) === dateKey(new Date())) return; viewDate = new Date(viewDate.getTime() + 864e5); renderDay(); };
+
+async function renderDay(){
+  const k = dateKey(viewDate), today = dateKey(new Date()) === k;
+  const wd = '日一二三四五六'[viewDate.getDay()];
+  $('dayLabel').textContent = (today ? '今天 ' : '') + (viewDate.getMonth()+1) + '月' + viewDate.getDate() + '日 周' + wd;
+  $('nextDay').style.visibility = today ? 'hidden' : 'visible';
+  const day = await getDay(k);
+  const t = day.meals.reduce((a,m) => { for (const x in a) a[x] += +m.t[x] || 0; return a; }, {kcal:0,p:0,f:0,c:0,fib:0,na:0});
+  $('dayStats').innerHTML = statsHTML(t);
+
+  const kid = prof()?.mode === 'kid';
+  $('dayMacros').classList.toggle('hidden', kid); $('weekCard').classList.toggle('hidden', kid);
+  const S = settings, gP = S.kcal*S.p/100/4, gF = S.kcal*S.f/100/9, gC = S.kcal*S.c/100/4;
+  const bar = (lab, v, g, col, unit) => `<div class="mac"><span>${lab}</span><div class="bar"><i style="width:${Math.min(100, g? v/g*100 : 0)}%;background:${v>g*1.05?'var(--red)':col}"></i></div><span>${r0(v)} / ${r0(g)} ${unit}</span></div>`;
+  $('dayMacros').innerHTML = bar('热量', t.kcal, S.kcal, 'var(--g)', 'kcal') + bar('蛋白质', t.p, gP, 'var(--p)', 'g')
+    + bar('脂肪', t.f, gF, 'var(--f)', 'g') + bar('碳水', t.c, gC, 'var(--c)', 'g') + bar('钠', t.na, S.na, '#64748b', 'mg');
+  const left = S.kcal - t.kcal;
+  $('dayLeft').textContent = kid ? (day.meals.length ? '🌟 好好吃饭就是最棒的！完成下面的小任务来收集星星吧。' : '') : day.meals.length ? (left >= 0 ? `还可以吃约 ${r0(left)} kcal。` : `已超出目标 ${r0(-left)} kcal。`) + (t.p < gP*0.7 && today ? ' 蛋白质偏少，下一餐可以加些鱼、蛋、豆腐。' : '') : '';
+
+  const byType = MEALS.map(ty => day.meals.filter(m => m.type === ty)).filter(a => a.length);
+  $('meals').innerHTML = day.meals.length ? byType.flat().map(m => `
+    <div class="meal">
+      ${m.thumb ? `<img src="${m.thumb}" alt="">` : '<div class="ph">🍽️</div>'}
+      <div style="flex:1;min-width:0">
+        <div><b>${esc(m.type)}</b> · <b style="color:var(--g)">${m.t.kcal} kcal</b> <span class="mu">${new Date(m.ts).toTimeString().slice(0,5)}${m.ratio && m.ratio!==1 ? ' · 吃了'+Math.round(m.ratio*100)+'%' : ''}</span></div>
+        <div class="mu" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.name || m.items.map(i=>i.n).join('、'))}</div>
+        <div class="mu">蛋白 ${m.t.p} · 脂肪 ${m.t.f} · 碳水 ${m.t.c}</div>
+      </div>
+      <button class="del" data-id="${m.id}">删除</button>
+    </div>`).join('') : '<div class="mu">这天还没有记录</div>';
+  $('meals').querySelectorAll('.del').forEach(b => b.onclick = async () => {
+    if (!b.classList.contains('arm')){ b.classList.add('arm'); b.textContent = '确认删除'; setTimeout(() => { b.classList.remove('arm'); b.textContent='删除'; }, 3000); return; }
+    day.meals = day.meals.filter(m => m.id !== b.dataset.id); await putDay(k); renderDay();
+  });
+  renderReward(k, t, today); renderKid(k, today); renderWeight();
+  if (!kid) renderWeek();
+}
+
+async function renderWeek(){
+  const days = []; for (let i = 6; i >= 0; i--) days.push(new Date(Date.now() - i*864e5));
+  const vals = await Promise.all(days.map(async d => (await getDay(dateKey(d))).meals.reduce((a,m) => a + (+m.t.kcal||0), 0)));
+  const max = Math.max(settings.kcal * 1.3, ...vals);
+  $('week').innerHTML = days.map((d,i) => `<div class="col"><em>${vals[i] ? r0(vals[i]) : ''}</em><i class="${vals[i] > settings.kcal ? 'over' : ''}" style="height:${vals[i]/max*100*0.82}%"></i><span>${'日一二三四五六'[d.getDay()]}</span></div>`).join('')
+    + `<div class="goal-line" style="bottom:calc(${settings.kcal/max*82}% + 17px)"></div>`;
+}
+
+
+/* =========================================================
+   买菜清单 → 分配餐食
+   ========================================================= */
+let pPhotos = [], pPeople = 1, pMeals = 2, pDays = 0, plan = null, planLoaded = false;
+const slotName = (i, n) => n === 2 ? ['午餐','晚餐'][i] : n === 3 ? ['早餐','午餐','晚餐'][i] : '第' + (i+1) + '餐';
+
+function drawPlanChips(){
+  const mk = (id, opts, cur, set) => {
+    $(id).innerHTML = opts.map(([t,v]) => `<button class="chip ${v===cur?'on':''}" data-v="${v}">${t}</button>`).join('');
+    $(id).querySelectorAll('button').forEach(b => b.onclick = () => { set(+b.dataset.v); drawPlanChips(); });
+  };
+  mk('pPeople', [['1人',1],['2人',2],['3人',3],['4人',4],['5人',5]], pPeople, v => pPeople = v);
+  mk('pMeals', [['2餐',2],['3餐',3]], pMeals, v => pMeals = v);
+  mk('pDays', [['自动',0],['1天',1],['2天',2],['3天',3],['4天',4],['5天',5],['7天',7]], pDays, v => pDays = v);
+}
+function drawPThumbs(){
+  $('pThumbs').innerHTML = pPhotos.map((p,i) => `<div><img src="${p.url}" alt=""><button data-i="${i}">✕</button></div>`).join('');
+  $('pThumbs').querySelectorAll('button').forEach(b => b.onclick = () => { URL.revokeObjectURL(pPhotos[+b.dataset.i].url); pPhotos.splice(+b.dataset.i,1); drawPThumbs(); });
+  $('pCamBtn').disabled = $('pAlbBtn').disabled = pPhotos.length >= 4;
+}
+const onPPick = async e => {
+  const files = [...e.target.files].slice(0, 4 - pPhotos.length); e.target.value = '';
+  for (const f of files){ try{ const blob = await shrink(f, 1800, .88); pPhotos.push({blob, url: URL.createObjectURL(blob)}); }catch(err){ toast('有一张图片无法读取'); } }
+  drawPThumbs();
+};
+$('pCamBtn').onclick = () => $('pCam').click();
+$('pAlbBtn').onclick = () => $('pFile').click();
+$('pCam').onchange = onPPick; $('pFile').onchange = onPPick;
+drawPlanChips(); drawPThumbs();
+
+async function loadPlan(){
+  if (planLoaded) return; planLoaded = true;
+  const d = await loadDoc('plan'); if (d && Array.isArray(d.days)) { plan = d; renderPlan(); }
+}
+
+$('planGo').onclick = async () => {
+  const list = $('pList').value.trim();
+  
+  if (!list && !pPhotos.length){ toast('请先拍小票或输入清单'); return; }
+  const perMeal = Math.round(settings.kcal / pMeals);
+  const prompt = `你是注册营养师兼家常菜厨师。用户住在日本名古屋，在日本超市买菜。请把这次买的食材合理分配成餐食。${modeHint()}
+${pPhotos.length ? `附带 ${pPhotos.length} 张照片：购物小票（日文）或食材照片。请识别出所有食材及数量/重量；日文商品名翻译成中文简体；非食品（袋子、日用品、积分、折扣行）忽略。` : ''}
+${list ? '【用户输入的清单】\n' + list : ''}
+
+【条件】
+- 吃饭人数：${pPeople} 人；每天 ${pMeals} 餐（${Array.from({length:pMeals},(_,i)=>slotName(i,pMeals)).join('、')}）
+- 安排天数：${pDays ? pDays + ' 天' : '根据食材数量自动决定（通常 2–5 天）'}
+- 每人每餐热量目标约 ${perMeal} kcal；蛋白质约占 ${settings.p}%，脂肪 ${settings.f}%，碳水 ${settings.c}%
+${$('pPref').value.trim() ? '- 用户说明：' + $('pPref').value.trim() : '- 默认家里有米饭和基本调料（酱油、盐、糖、油、味噌）'}
+
+【分配原则】
+1. 易坏的先吃：鱼、肉、叶菜安排在前面；根茎菜、蛋、冷冻品、豆制品可放后面。
+2. 每餐都有蛋白质 + 蔬菜 + 主食，荤素搭配，同一主菜不要连着两餐重复。
+3. 每样食材标明这一餐用多少克，总用量不能超过买的量；用不完的列入 leftover。
+4. 做法要家常、30 分钟内能做好，写一句关键步骤。
+5. 营养按每人一份计算（用日本食品标准成分表或中国食物成分表），包含主食米饭。
+6. 如果某天明显缺蛋白质或蔬菜，在 shopping_tips 里建议补买什么。
+
+【输出】只输出一个 JSON 对象：
+{"groceries":[{"name":"食材","qty":"数量或重量"}],
+ "days":[{"day":1,"meals":[{"slot":"${slotName(0,pMeals)}","dish":"菜名（可多道，用＋连接）","ingredients":[{"name":"食材","amount_g":数字}],"steps":"一句做法","per_person":{"kcal":数字,"protein":数字,"fat":数字,"carbs":数字,"fiber":数字,"sodium_mg":数字}}]}],
+ "leftover":["没用完的食材和剩余量"],
+ "shopping_tips":"一句补买建议，没有则空字符串",
+ "summary":"一句话总结这份菜单的特点"}`;
+  const b = $('planGo'); b.disabled = true; b.innerHTML = '<span class="spin"></span>正在安排，约 30–90 秒…';
+  const ctlP = new AbortController();
+  $('pStatus').innerHTML = '<button class="btn ghost sm" id="pStop">停止</button>'; $('pStop').onclick = () => ctlP.abort();
+  try{
+    const d = await sample.json(prompt, { images: pPhotos.length ? pPhotos.map(p => p.blob) : undefined, modelTier: settings.tier, signal: ctlP.signal, cache: false });
+    if (!d || !Array.isArray(d.days) || !d.days.length) throw {code:'invalid_json'};
+    plan = { created: Date.now(), people: pPeople, mealsPerDay: pMeals, groceries: Array.isArray(d.groceries) ? d.groceries : [],
+      days: d.days.map((dy,i) => ({ day: i+1, meals: (Array.isArray(dy.meals) ? dy.meals : []).map((m,j) => ({
+        slot: String(m.slot || slotName(j,pMeals)), dish: String(m.dish || ''), steps: String(m.steps || ''),
+        ingredients: (Array.isArray(m.ingredients) ? m.ingredients : []).map(x => ({name:String(x.name||''), g:r0(num(x.amount_g))})),
+        pp: {kcal:r0(num(m.per_person?.kcal)), p:r1(num(m.per_person?.protein)), f:r1(num(m.per_person?.fat)), c:r1(num(m.per_person?.carbs)), fib:r1(num(m.per_person?.fiber)), na:r0(num(m.per_person?.sodium_mg))},
+        done: false })) })),
+      leftover: (Array.isArray(d.leftover) ? d.leftover : []).map(String), tips: String(d.shopping_tips || ''), summary: String(d.summary || '') };
+    await saveDoc('plan', plan); planLoaded = true;
+    renderPlan(); setTimeout(() => $('planOut').scrollIntoView({behavior:'smooth'}), 50);
+    $('pStatus').textContent = '';
+  } catch(e){
+    $('pStatus').textContent = e && e.code === 'cancelled' ? '已停止' : '';
+    if (!e || e.code !== 'cancelled') $('planOut').innerHTML = `<div class="card err">${esc(errText(e))}</div>`;
+  } finally { b.disabled = false; b.textContent = '生成菜单'; }
+};
+
+function renderPlan(){
+  if (!plan){ $('planOut').innerHTML = ''; return; }
+  const total = plan.days.reduce((a,d) => a + d.meals.length, 0), done = plan.days.reduce((a,d) => a + d.meals.filter(m => m.done).length, 0);
+  $('planOut').innerHTML = `
+  <div class="card">
+    <h3>本次菜单 <span class="mu" style="font-weight:400">· ${plan.people}人 · ${plan.days.length}天 · 已吃 ${done}/${total}</span></h3>
+    ${plan.summary ? `<div class="note">💡 ${esc(plan.summary)}</div>` : ''}
+    ${plan.groceries.length ? `<div class="tip">🛒 ${plan.groceries.map(g => esc(g.name) + (g.qty ? ' ' + esc(g.qty) : '')).join('、')}</div>` : ''}
+  </div>
+  ${plan.days.map((d,di) => `
+  <div class="card">
+    <h3>第 ${d.day} 天</h3>
+    ${d.meals.map((m,mi) => `
+      <div class="item" style="${m.done ? 'opacity:.5' : ''}">
+        <div class="top"><div class="grow">
+          <div class="n">${esc(m.slot)}：${esc(m.dish)}${m.done ? '<span class="tag t-高">已记录</span>' : ''}</div>
+          <div class="s">${m.ingredients.map(x => esc(x.name) + (x.g ? ' ' + x.g + 'g' : '')).join('、')}</div>
+          ${m.steps ? `<div class="s">👩‍🍳 ${esc(m.steps)}</div>` : ''}
+          <div class="s">每人 <b style="color:var(--g)">${m.pp.kcal} kcal</b> · 蛋白 ${m.pp.p} · 脂肪 ${m.pp.f} · 碳水 ${m.pp.c}</div>
+        </div></div>
+        ${m.done ? '' : `<button class="btn sec sm" style="margin-top:8px" data-d="${di}" data-m="${mi}">✅ 吃了，记入今天</button>`}
+      </div>`).join('')}
+  </div>`).join('')}
+  ${plan.leftover.length || plan.tips ? `<div class="card">
+    ${plan.leftover.length ? `<div class="tip">📦 剩余：${plan.leftover.map(esc).join('、')}</div>` : ''}
+    ${plan.tips ? `<div class="note q">🛒 ${esc(plan.tips)}</div>` : ''}
+  </div>` : ''}`;
+  $('planOut').querySelectorAll('button[data-d]').forEach(b => b.onclick = async () => {
+    const m = plan.days[+b.dataset.d].meals[+b.dataset.m]; b.disabled = true;
+    const k = dateKey(new Date()), day = await getDay(k);
+    const type = MEALS.includes(m.slot) ? m.slot : guessMeal();
+    day.meals.push({ id: Date.now().toString(36), ts: Date.now(), type, name: m.dish, ratio: 1, thumb: '',
+      items: m.ingredients.map(x => ({n: x.name, w: plan.people > 1 ? r0(x.g / plan.people) : x.g})), t: {...m.pp} });
+    await putDay(k);
+    m.done = true; await saveDoc('plan', plan); renderPlan(); toast('已记入今天');
+  });
+}
+
+
+/* =========================================================
+   多 AI 接入（浏览器直连）
+   ========================================================= */
+const PROVIDERS = {
+  gemini: {name:'Gemini', type:'gemini', model:'gemini-2.5-flash', keyHelp:'aistudio.google.com 免费申请，有免费额度'},
+  claude: {name:'Claude', type:'anthropic', model:'claude-sonnet-5-5', keyHelp:'console.anthropic.com 申请（按量付费）'},
+  openai: {name:'ChatGPT', type:'openai', url:'https://api.openai.com/v1/chat/completions', model:'gpt-5-mini', keyHelp:'platform.openai.com 申请（按量付费）'},
+  zhipu:  {name:'智谱', type:'openai', url:'https://open.bigmodel.cn/api/paas/v4/chat/completions', model:'glm-4v-flash', keyHelp:'open.bigmodel.cn 申请，glm-4v-flash 免费'},
+  qwen:   {name:'通义千问', type:'openai', url:'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', model:'qwen-vl-max', keyHelp:'阿里云百炼申请'},
+  doubao: {name:'豆包', type:'openai', url:'https://ark.cn-beijing.volces.com/api/v3/chat/completions', model:'', keyHelp:'火山方舟申请；模型填接入点 ID（ep-xxxx）'},
+  custom: {name:'自定义', type:'openai', url:'', model:'', keyHelp:'任何兼容 OpenAI 格式、支持图片的接口'}
+};
+let ai = {current:'gemini', cfg:{}};
+let formProv = null;
+
+function renderAIBar(){
+  $('aiBar').innerHTML = '<span class="mu" style="align-self:center">AI：</span>' + Object.keys(PROVIDERS).map(k => {
+    const has = !!ai.cfg[k]?.key;
+    return `<button class="chip ${k===ai.current?'on':''}" data-k="${k}" style="padding:4px 10px;font-size:13px">${PROVIDERS[k].name}${has?'':' ·未设'}</button>`;
+  }).join('');
+  $('aiBar').querySelectorAll('button').forEach(b => b.onclick = () => {
+    saveProvForm(); ai.current = b.dataset.k; formProv = ai.current; local.set('ai', ai); renderAIBar(); renderProvForm();
+    if (!ai.cfg[ai.current].key) toast('请到「设置」填写 ' + PROVIDERS[ai.current].name + ' 的 API Key'); else toast('已切换到 ' + PROVIDERS[ai.current].name);
+  });
+}
+function renderProvForm(){
+  formProv = formProv || ai.current;
+  $('provChips').innerHTML = Object.keys(PROVIDERS).map(k => `<button class="chip ${k===formProv?'on':''}" data-k="${k}">${PROVIDERS[k].name}${k===ai.current?' ✓':''}</button>`).join('');
+  $('provChips').querySelectorAll('button').forEach(b => b.onclick = () => { saveProvForm(); formProv = b.dataset.k; renderProvForm(); });
+  const P = PROVIDERS[formProv], c = ai.cfg[formProv];
+  $('provForm').innerHTML = `
+    <div class="tip">${esc(P.keyHelp)}</div>
+    ${P.type==='openai' ? `<label class="l">接口地址</label><input id="pfUrl" value="${esc(c.url)}">` : ''}
+    <label class="l">模型名称</label><input id="pfModel" value="${esc(c.model)}" placeholder="${esc(P.model)}">
+    <label class="l">API Key</label><input id="pfKey" type="password" value="${esc(c.key)}" autocomplete="off">
+    <div class="row" style="margin-top:10px">
+      <button class="btn sec grow" id="pfUse">${formProv===ai.current?'✓ 正在使用':'设为当前 AI'}</button>
+      <button class="btn ghost grow" id="pfTest">测试连接</button>
+    </div><div class="mu" id="pfMsg" style="margin-top:6px"></div>`;
+  $('pfKey').onchange = () => { saveProvForm(); renderAIBar(); };
+  $('pfUse').onclick = () => { saveProvForm(); ai.current = formProv; local.set('ai', ai); renderAIBar(); renderProvForm(); };
+  $('pfTest').onclick = async () => {
+    saveProvForm(); const m = $('pfMsg'); m.innerHTML = '<span class="spin"></span>测试中…';
+    try{ const t = await callAIText('只回复两个字：成功', [], null, formProv); m.textContent = '✅ 连接成功：' + t.slice(0, 20); }
+    catch(e){ m.innerHTML = '<span class="err">❌ ' + esc(errText(e)) + '</span>'; }
+  };
+}
+function saveProvForm(){
+  if (!formProv || !$('pfKey')) return;
+  const c = ai.cfg[formProv];
+  c.key = $('pfKey').value.trim(); c.model = $('pfModel').value.trim() || PROVIDERS[formProv].model;
+  if ($('pfUrl')) c.url = $('pfUrl').value.trim();
+  local.set('ai', ai);
+}
+
+function blobToB64(blob){
+  return new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(blob); });
+}
+async function callAIText(prompt, blobs, signal, provKey){
+  const k = provKey || ai.current, P = PROVIDERS[k], c = ai.cfg[k];
+  if (!c || !c.key) throw {code:'no_key'};
+  const model = c.model || P.model;
+  if (!model) throw {code:'api', message: P.name + '：请先填写模型名称'};
+  const imgs = await Promise.all((blobs || []).map(blobToB64));
+  let url, headers = {'Content-Type':'application/json'}, body;
+  if (P.type === 'anthropic'){
+    url = 'https://api.anthropic.com/v1/messages';
+    Object.assign(headers, {'x-api-key': c.key, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true'});
+    body = {model, max_tokens: 8000, messages:[{role:'user', content:[
+      ...imgs.map(d => ({type:'image', source:{type:'base64', media_type:'image/jpeg', data:d}})), {type:'text', text:prompt}]}]};
+  } else if (P.type === 'gemini'){
+    url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(c.key);
+    body = {contents:[{role:'user', parts:[...imgs.map(d => ({inline_data:{mime_type:'image/jpeg', data:d}})), {text:prompt}]}]};
+  } else {
+    url = c.url || P.url; if (!url) throw {code:'api', message:'请先填写接口地址'};
+    headers.Authorization = 'Bearer ' + c.key;
+    body = {model, messages:[{role:'user', content: imgs.length
+      ? [...imgs.map(d => ({type:'image_url', image_url:{url:'data:image/jpeg;base64,' + d}})), {type:'text', text:prompt}]
+      : prompt}]};
+  }
+  let res;
+  try{ res = await fetch(url, {method:'POST', headers, body: JSON.stringify(body), signal}); }
+  catch(e){
+    if (e && e.name === 'AbortError') throw {code:'cancelled'};
+    throw {code:'api', message: P.name + '：网络请求失败（网络不通，或该服务不允许网页直接调用），请换一个 AI 试试'};
+  }
+  const raw = await res.text();
+  if (!res.ok){
+    let msg = raw; try{ const j = JSON.parse(raw); msg = j.error?.message || j.message || raw; }catch(e){}
+    const hint = res.status === 401 || res.status === 403 ? '（API Key 不对或没有权限）' : res.status === 429 ? '（额度用完或请求太频繁）' : res.status === 404 ? '（模型名称可能不对）' : '';
+    throw {code:'api', message: P.name + ' 错误 ' + res.status + hint + '：' + String(msg).slice(0, 160)};
+  }
+  const j = JSON.parse(raw);
+  let text = '';
+  if (P.type === 'anthropic') text = (j.content || []).filter(x => x.type === 'text').map(x => x.text).join('');
+  else if (P.type === 'gemini') text = (j.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+  else { const m = j.choices?.[0]?.message?.content; text = typeof m === 'string' ? m : (m || []).map(x => x.text || '').join(''); }
+  if (!text.trim()) throw {code:'api', message: P.name + ' 没有返回内容，请再试一次'};
+  return text;
+}
+async function callAIJson(prompt, opts = {}){
+  const imgs = opts.images ? (Array.isArray(opts.images) ? opts.images : [opts.images]) : [];
+  const t = await callAIText(prompt, imgs, opts.signal);
+  return parseLoose(t);
+}
+function parseLoose(t){
+  t = t.replace(/```json|```/gi, '').trim();
+  try{ return JSON.parse(t); }catch(e){}
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if (a >= 0 && b > a){ try{ return JSON.parse(t.slice(a, b + 1)); }catch(e){} }
+  throw {code:'invalid_json'};
+}
+
+/* 备份 */
+$('expBtn').onclick = () => {
+  const out = {app:'food-ai', v:1, at: new Date().toISOString(), data:{}};
+  for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if (k.startsWith('fa_') && k !== 'fa_ai') out.data[k] = localStorage.getItem(k); }
+  const blob = new Blob([JSON.stringify(out)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '算热量备份-' + dateKey(new Date()) + '.json';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+};
+$('impBtn').onclick = () => $('impFile').click();
+$('impFile').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try{
+    const j = JSON.parse(await f.text()); if (j.app !== 'food-ai' || !j.data) throw 0;
+    for (const k in j.data) if (k.startsWith('fa_') && k !== 'fa_ai') localStorage.setItem(k, j.data[k]);
+    for (const k in dayCache) delete dayCache[k];
+    const st = local.get('settings'); if (st) settings = {...DEFAULT_SET, ...st};
+    toast('已导入，正在重新载入…'); setTimeout(() => location.reload(), 800);
+  } catch(err){ toast('备份文件无法读取'); }
+};
+
+
+/* =========================================================
+   多人使用 · 模式 · 目标
+   ========================================================= */
+const MODES = {
+  health: {name:'健康模式', icon:'💚', desc:'均衡饮食，保持现在的体重'},
+  loss:   {name:'减肥模式', icon:'🔥', desc:'适度减少热量（每天约少 500 kcal），蛋白质吃够'},
+  kid:    {name:'儿童健康成长', icon:'🌟', desc:'适合 6–17 岁。不节食，用小任务和星星养成好习惯'}
+};
+const AVATARS = ['👨','👩','👴','👵','👦','👧','🧒','🐼','🐯','🐰','🦊','🐻'];
+const ACT = [['久坐',1.2],['轻度活动',1.375],['中度活动',1.55],['经常运动',1.725]];
+let profiles = [], pinBuf = '', pinFor = null;
+const prof = () => profiles.find(p => p.id === curPid);
+const hashPin = s => { let h = 5381; for (const c of 'fa' + s) h = ((h << 5) + h + c.charCodeAt(0)) | 0; return String(h); };
+
+function initProfiles(){
+  profiles = local.get('profiles') || [];
+  if (!profiles.length){
+    // 把旧数据迁移到第一个成员
+    const old = []; for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if (k.startsWith('fa_') && !GLOBAL_KEYS.includes(k.slice(3))) old.push(k); }
+    if (old.length){
+      profiles = [{id:'p1', name:'我', avatar:'👨', mode:'health', sex:'m', age:40, h:170, w:65, tw:65, act:1.375, pin:''}];
+      old.forEach(k => { localStorage.setItem('fa_p1_' + k.slice(3), localStorage.getItem(k)); localStorage.removeItem(k); });
+      local.set('profiles', profiles);
+    }
+  }
+  const last = local.get('cur');
+  const lp = profiles.find(p => p.id === last);
+  if (lp && !lp.pin) enterProfile(lp.id); else showLogin();
+}
+function showLogin(){
+  pinFor = null; pinBuf = '';
+  $('login').classList.remove('hidden');
+  $('login').innerHTML = `<h2>🍱 谁在用？</h2>
+    <div class="pgrid">${profiles.map(p => `<button data-id="${p.id}"><b>${p.avatar}</b>${esc(p.name)}<br><span>${MODES[p.mode].icon} ${MODES[p.mode].name}${p.pin ? ' 🔒' : ''}</span></button>`).join('')}
+    <button id="addProf"><b>＋</b>添加成员<br><span>家人各用各的</span></button></div>
+    <div class="tip" style="text-align:center;margin-top:20px">每个成员的记录、目标、菜单都分开保存在这台手机上</div>`;
+  $('login').querySelectorAll('button[data-id]').forEach(b => b.onclick = () => {
+    const p = profiles.find(x => x.id === b.dataset.id);
+    if (p.pin) askPin(p); else enterProfile(p.id);
+  });
+  $('addProf').onclick = () => newProfile();
+}
+function askPin(p){
+  pinFor = p; pinBuf = '';
+  $('login').innerHTML = `<h2>${p.avatar} ${esc(p.name)}</h2><div class="mu" style="text-align:center">输入 4 位密码</div>
+    <div class="pindots" id="pd"></div>
+    <div class="pinpad">${[1,2,3,4,5,6,7,8,9,'←',0,'✕'].map(k => `<button data-k="${k}">${k}</button>`).join('')}</div>`;
+  const draw = () => $('pd').textContent = '●'.repeat(pinBuf.length) + '○'.repeat(4 - pinBuf.length);
+  draw();
+  $('login').querySelectorAll('.pinpad button').forEach(b => b.onclick = () => {
+    const k = b.dataset.k;
+    if (k === '✕') return showLogin();
+    if (k === '←') pinBuf = pinBuf.slice(0, -1); else if (pinBuf.length < 4) pinBuf += k;
+    draw();
+    if (pinBuf.length === 4){
+      if (hashPin(pinBuf) === p.pin) enterProfile(p.id);
+      else { pinBuf = ''; setTimeout(() => { $('pd').textContent = '密码不对'; setTimeout(draw, 900); }, 100); }
+    }
+  });
+}
+function newProfile(){
+  const id = 'p' + Date.now().toString(36);
+  profiles.push({id, name:'成员' + (profiles.length + 1), avatar: AVATARS[profiles.length % AVATARS.length], mode:'health', sex:'m', age:35, h:170, w:65, tw:65, act:1.375, pin:''});
+  curPid = null; local.set('profiles', profiles);
+  enterProfile(id, true);
+}
+async function enterProfile(id, isNew){
+  curPid = id; local.set('cur', id);
+  for (const k in dayCache) delete dayCache[k];
+  plan = null; planLoaded = false; $('planOut').innerHTML = '';
+  const st = local.get('settings');
+  settings = st ? {...DEFAULT_SET, ...st} : {...DEFAULT_SET, ...calcTargets(prof())};
+  if (!st) local.set('settings', settings);
+  fillSettings(); renderProfileForm(); renderWho();
+  $('login').classList.add('hidden');
+  current = null; $('result').innerHTML = '';
+  if (isNew){ document.querySelector('nav button[data-p="set"]').click(); toast('先填写资料，目标会自动算好'); }
+  else document.querySelector('nav button.on').click();
+}
+function renderWho(){ const p = prof(); $('whoBtn').innerHTML = p ? `${p.avatar} ${esc(p.name)} ▾` : '登录'; }
+$('whoBtn').onclick = () => showLogin();
+
+function kidKcal(age, sex){
+  const boy = [1400,1400,1500,1650,1750,1800,2050,2050,2050,2050,2050,2500,2500,2500,2500,2500,2500,2500];
+  const girl= [1250,1250,1350,1450,1550,1700,1800,1800,1800,1800,1800,2000,2000,2000,2000,2000,2000,2000];
+  const a = Math.min(17, Math.max(0, Math.round(age||10)));
+  return (sex === 'f' ? girl : boy)[a];
+}
+function calcTargets(p){
+  if (!p) return {};
+  if (p.mode === 'kid') return {kcal: kidKcal(p.age, p.sex), p:15, f:30, c:55, na: p.age < 11 ? 1500 : 1800};
+  const bmr = 10*(+p.w||60) + 6.25*(+p.h||165) - 5*(+p.age||35) + (p.sex === 'f' ? -161 : 5);
+  const tdee = bmr * (+p.act || 1.375);
+  if (p.mode === 'loss'){
+    const floor = p.sex === 'f' ? 1200 : 1500;
+    return {kcal: Math.round(Math.max(floor, tdee - 500)/10)*10, p:30, f:30, c:40, na:2000};
+  }
+  return {kcal: Math.round(tdee/10)*10, p:20, f:30, c:50, na:2000};
+}
+function modeHint(){
+  const p = prof(); if (!p) return '';
+  if (p.mode === 'kid') return `\n【重要】这是一位 ${p.age} 岁孩子的餐食，在用"儿童健康成长"模式。advice 要用孩子听得懂、鼓励的语气，绝不提节食、减肥、体重，重点放在多吃蔬菜水果、喝水代替甜饮料、吃够蛋白质。\n`;
+  if (p.mode === 'loss') return `\n用户在减肥，每日目标约 ${settings.kcal} kcal。advice 要具体：哪一项热量最高、怎么换更好，同时提醒蛋白质要吃够、不要过度节食。\n`;
+  return `\n用户目标是均衡健康饮食（每日约 ${settings.kcal} kcal）。\n`;
+}
+
+function renderProfileForm(){
+  const p = prof(); if (!p) { $('profCard').innerHTML = ''; return; }
+  $('profCard').innerHTML = `
+    <h3>成员资料</h3>
+    <label class="l">名字</label><input id="prName" value="${esc(p.name)}">
+    <label class="l">头像</label><div class="avs" id="prAv">${AVATARS.map(a => `<button class="${a===p.avatar?'on':''}">${a}</button>`).join('')}</div>
+    <label class="l">模式</label><div class="modes" id="prMode">${Object.entries(MODES).map(([k,m]) => `<button data-k="${k}" class="${k===p.mode?'on':''}"><b>${m.icon} ${m.name}</b><div>${m.desc}</div></button>`).join('')}</div>
+    <div class="row" style="margin-top:4px">
+      <div class="grow"><label class="l">性别</label><select id="prSex"><option value="m" ${p.sex==='m'?'selected':''}>男</option><option value="f" ${p.sex==='f'?'selected':''}>女</option></select></div>
+      <div class="grow"><label class="l">年龄</label><input id="prAge" type="number" inputmode="numeric" value="${p.age}"></div>
+    </div>
+    <div class="row ${p.mode==='kid'?'hidden':''}" id="prBody">
+      <div class="grow"><label class="l">身高 cm</label><input id="prH" type="number" inputmode="decimal" value="${p.h}"></div>
+      <div class="grow"><label class="l">体重 kg</label><input id="prW" type="number" inputmode="decimal" value="${p.w}"></div>
+      <div class="grow ${p.mode==='loss'?'':'hidden'}"><label class="l">目标 kg</label><input id="prTW" type="number" inputmode="decimal" value="${p.tw}"></div>
+    </div>
+    <div class="${p.mode==='kid'?'hidden':''}"><label class="l">活动量</label><select id="prAct">${ACT.map(([t,v]) => `<option value="${v}" ${+p.act===v?'selected':''}>${t}</option>`).join('')}</select></div>
+    ${p.mode==='kid' ? '<div class="note q">孩子正在长身体，不建议节食。这里的热量只作为参考，主要靠完成「小任务」养成好习惯。体重问题请咨询儿科医生。</div>' : ''}
+    <div id="prWarn"></div>
+    <label class="l">登录密码（可选，4 位数字，留空=不设）</label><input id="prPin" type="password" inputmode="numeric" maxlength="4" placeholder="${p.pin ? '已设置，输入新密码可修改' : '不设密码'}">
+    ${p.pin ? '<label class="row mu" style="margin-top:6px"><input type="checkbox" id="prNoPin" style="width:auto"> 取消密码</label>' : ''}
+    <div class="row" style="margin-top:12px">
+      <button class="btn grow" id="prSave">保存资料</button>
+      ${profiles.length > 1 ? '<button class="btn ghost sm" id="prDel">删除成员</button>' : ''}
+    </div>`;
+  $('prAv').querySelectorAll('button').forEach(b => b.onclick = () => { $('prAv').querySelectorAll('button').forEach(x => x.classList.toggle('on', x===b)); });
+  $('prMode').querySelectorAll('button').forEach(b => b.onclick = () => { saveProfileForm(false); p.mode = b.dataset.k; renderProfileForm(); });
+  $('prSave').onclick = () => { saveProfileForm(true); };
+  const d = $('prDel'); if (d) d.onclick = () => {
+    if (d.dataset.arm !== '1'){ d.dataset.arm = '1'; d.textContent = '确认删除？'; return; }
+    const pre = 'fa_' + p.id + '_'; const ks = [];
+    for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if (k.startsWith(pre)) ks.push(k); }
+    ks.forEach(k => localStorage.removeItem(k));
+    profiles = profiles.filter(x => x.id !== p.id); curPid = null; local.set('profiles', profiles); local.set('cur', null); showLogin();
+  };
+  checkLossWarn();
+}
+function checkLossWarn(){
+  const p = prof(), el = $('prWarn'); if (!el) return;
+  el.innerHTML = '';
+  if (p.mode === 'loss' && p.h && p.tw){
+    const bmi = p.tw / Math.pow(p.h/100, 2);
+    if (bmi < 18.5) el.innerHTML = `<div class="note q">目标体重的 BMI 只有 ${r1(bmi)}，低于健康范围（18.5–24）。建议把目标定在 ${r1(18.5*Math.pow(p.h/100,2))} kg 以上。</div>`;
+  }
+  if (p.mode !== 'kid' && p.age && p.age < 18) el.innerHTML += '<div class="note q">未满 18 岁建议使用「儿童健康成长」模式。</div>';
+}
+function saveProfileForm(applyTargets){
+  const p = prof(); if (!p || !$('prName')) return;
+  const oldMode = p.mode;
+  p.name = $('prName').value.trim() || p.name;
+  const av = $('prAv').querySelector('.on'); if (av) p.avatar = av.textContent;
+  p.sex = $('prSex').value; p.age = +$('prAge').value || p.age;
+  if ($('prH')){ p.h = +$('prH').value || p.h; p.w = +$('prW').value || p.w; p.tw = +$('prTW').value || p.tw; p.act = +$('prAct').value || p.act; }
+  const pin = $('prPin').value.trim();
+  if ($('prNoPin') && $('prNoPin').checked) p.pin = '';
+  else if (pin){ if (!/^\d{4}$/.test(pin)){ toast('密码要 4 位数字'); return; } p.pin = hashPin(pin); }
+  local.set('profiles', profiles); renderWho();
+  if (applyTargets){
+    if (p.mode === 'loss' && !local.get('w_start')) local.set('w_start', {kg: p.w, d: dateKey(new Date())});
+    settings = {...settings, ...calcTargets(p)}; local.set('settings', settings); fillSettings();
+    renderProfileForm(); toast(MODES[p.mode].icon + ' 已保存，每日目标已按资料更新');
+  }
+}
+$('autoTgt').onclick = () => { saveProfileForm(false); const t = calcTargets(prof()); settings = {...settings, ...t}; fillSettings(); toast('已算好，记得点「保存设置」'); };
+
+/* =========================================================
+   奖励 · 打卡 · 情绪价值
+   ========================================================= */
+const BADGES = [
+  {id:'s3', icon:'🥉', name:'连续 3 天', test:a => a.best >= 3},
+  {id:'s7', icon:'🥈', name:'坚持一周', test:a => a.best >= 7},
+  {id:'s14', icon:'🥇', name:'两周达人', test:a => a.best >= 14},
+  {id:'s30', icon:'🏆', name:'30 天传奇', test:a => a.best >= 30},
+  {id:'t10', icon:'🌱', name:'10 颗星', test:a => a.stars >= 10},
+  {id:'t50', icon:'🌳', name:'50 颗星', test:a => a.stars >= 50},
+  {id:'t150', icon:'🌈', name:'150 颗星', test:a => a.stars >= 150}
+];
+const STICKERS = ['🐶','🐱','🐼','🐨','🦁','🐯','🦊','🐰','🐸','🐵','🦄','🐧','🐬','🦋','🐞','🦖','🐳','🦒','🐘','🦉'];
+const MSG = {
+  ok: ['今天完美达标！你对自己的好，身体都记得 💪','又稳稳完成一天，这种自律真的很酷！','做得漂亮！健康就是这样一天天攒出来的 ✨','今天的你，比昨天更接近理想的自己 🌟','了不起！坚持本身就是最大的天赋'],
+  near:['差一点点就达标了，明天一定可以！','今天也认真记录了，这已经很棒了 👍','不完美也没关系，愿意记录就是在进步'],
+  low: ['今天吃得有点少哦，减肥也要吃够，身体才有力气燃脂 🍳'],
+  kid: ['哇！你是健康小超人！🦸','太厉害了，今天的你闪闪发光 ✨','好棒！蔬菜精灵都在为你鼓掌 🥦👏','满分宝贝！明天继续收集星星吧 ⭐','你今天照顾好了自己，真了不起！'],
+  kidStar: ['又得一颗星！⭐','好样的！','继续加油！','真棒！']
+};
+const pick = a => a[Math.floor(Math.random() * a.length)];
+function getAch(){ const a = local.get('ach') || {}; return {days:{}, stars:0, best:0, badges:[], stickers:[], wm:[], ...a}; }
+function saveAch(a){ local.set('ach', a); }
+function streakOf(a){
+  let n = 0, d = new Date();
+  if (!a.days[dateKey(d)]?.ok) d = new Date(d.getTime() - 864e5);
+  while (a.days[dateKey(d)]?.ok){ n++; d = new Date(d.getTime() - 864e5); }
+  return n;
+}
+function celebrate(big, title, msg){
+  $('ceBig').textContent = big; $('ceT').textContent = title; $('ceM').textContent = msg;
+  const c = $('cele'); c.querySelectorAll('.cf').forEach(x => x.remove());
+  const bits = ['🎉','✨','⭐','🎊','💚','🌟'];
+  for (let i = 0; i < 28; i++){
+    const e = document.createElement('div'); e.className = 'cf'; e.textContent = pick(bits);
+    e.style.left = Math.random()*100 + '%'; e.style.animationDuration = (2 + Math.random()*2.5) + 's'; e.style.animationDelay = Math.random()*0.8 + 's';
+    c.appendChild(e);
+  }
+  c.classList.add('on');
+  try{ navigator.vibrate && navigator.vibrate([60,40,60]); }catch(e){}
+}
+$('ceOk').onclick = () => $('cele').classList.remove('on');
+
+function evalDay(t, mealsN){
+  const S = settings, gP = S.kcal*S.p/100/4, mode = prof()?.mode;
+  const stars = [];
+  if (mode === 'loss'){
+    if (t.kcal <= S.kcal*1.05 && t.kcal >= S.kcal*0.75) stars.push('热量控制在目标内');
+  } else if (t.kcal >= S.kcal*0.85 && t.kcal <= S.kcal*1.1) stars.push('热量刚刚好');
+  if (t.p >= gP*0.8) stars.push('蛋白质吃够了');
+  if (t.na <= S.na) stars.push('盐没超标');
+  const ok = mealsN >= 2 && stars.length >= 2 && stars[0] !== '蛋白质吃够了';
+  const tooLow = mode === 'loss' && mealsN >= 2 && t.kcal < S.kcal*0.75;
+  return {stars, ok, tooLow};
+}
+function newBadges(a){
+  const got = BADGES.filter(b => !a.badges.includes(b.id) && b.test(a));
+  got.forEach(b => a.badges.push(b.id)); return got;
+}
+function renderReward(k, t, today){
+  const p = prof(), a = getAch(), streak = streakOf(a), kid = p?.mode === 'kid';
+  const rec = a.days[k];
+  const meals = (dayCache[k]?.meals || []).length;
+  $('rewardCard').innerHTML = `
+    <h3>${p ? p.avatar + ' ' + esc(p.name) : ''}<span class="modeTag">${MODES[p?.mode || 'health'].icon} ${MODES[p?.mode || 'health'].name}</span></h3>
+    <div class="rw"><div><b>🔥 ${streak}</b><span>连续达标天数</span></div><div><b>⭐ ${a.stars}</b><span>累计星星</span></div><div><b>🏅 ${a.badges.length}</b><span>徽章</span></div></div>
+    <div class="badges">${BADGES.map(b => `<span class="${a.badges.includes(b.id)?'got':''}" title="${b.name}">${b.icon}</span>`).join('')}</div>
+    ${kid && a.stickers.length ? `<div class="mu" style="margin-top:8px">我的贴纸：</div><div style="font-size:26px;letter-spacing:4px">${a.stickers.join('')}</div>` : ''}
+    ${kid ? '' : today ? `<button class="btn" style="margin-top:12px" id="checkin">${rec ? '🔄 重新打卡（今天已得 ' + rec.stars + ' ⭐）' : '🎯 今日打卡，领取星星'}</button><div class="tip">一天吃完后点一下，看看今天达标了没有</div>` : (rec ? `<div class="tip">这天${rec.ok ? '已达标 ✅' : '未达标'}，得到 ${rec.stars} ⭐</div>` : '')}`;
+  const b = $('checkin'); if (b) b.onclick = () => {
+    if (!meals){ toast('今天还没有记录，先记几餐再打卡'); return; }
+    const r = evalDay(t, meals);
+    const prev = a.days[k]?.stars || 0;
+    a.stars += r.stars.length - prev; a.days[k] = {ok: r.ok, stars: r.stars.length};
+    a.best = Math.max(a.best, streakOf(a));
+    const nb = newBadges(a); saveAch(a);
+    const s = streakOf(a);
+    if (nb.length) celebrate(nb[nb.length-1].icon, '解锁徽章：' + nb[nb.length-1].name, pick(MSG.ok) + (s > 1 ? `\n已经连续 ${s} 天！` : ''));
+    else if (r.ok) celebrate(s >= 3 ? '🔥' : '🎉', s > 1 ? `连续 ${s} 天达标！` : '今日达标！', pick(MSG.ok) + '\n✓ ' + r.stars.join('  ✓ '));
+    else if (r.tooLow) celebrate('🍳', '今天吃得太少啦', pick(MSG.low));
+    else celebrate('🌤️', `今天得到 ${r.stars.length} 颗星`, pick(MSG.near) + (r.stars.length ? '\n✓ ' + r.stars.join('  ✓ ') : ''));
+    renderDay();
+  };
+}
+
+/* 儿童：每日小任务 */
+const KID_TASKS = [
+  {id:'veg', ic:'🥦', t:'吃了蔬菜（至少 2 次）'},
+  {id:'fruit', ic:'🍎', t:'吃了一份水果'},
+  {id:'water', ic:'💧', t:'喝水，没有喝甜饮料'},
+  {id:'move', ic:'⚽', t:'运动或玩耍 1 小时'},
+  {id:'meal', ic:'🍚', t:'三餐按时吃，没有乱吃零食'}
+];
+function renderKid(k, today){
+  const kid = prof()?.mode === 'kid'; $('kidCard').classList.toggle('hidden', !kid); if (!kid) return;
+  const a = getAch(), done = (a.days[k]?.tasks) || [];
+  $('kidCard').innerHTML = `<h3>今天的小任务 ${'⭐'.repeat(done.length)}<span class="mu" style="font-weight:400"> ${done.length}/5</span></h3>
+    ${KID_TASKS.map(x => `<button class="task ${done.includes(x.id)?'on':''}" data-id="${x.id}" ${today?'':'disabled'}><span class="ic">${x.ic}</span>${x.t}<span class="st">${done.includes(x.id)?'⭐':'☆'}</span></button>`).join('')}
+    <div class="tip">完成 4 个就是「完美一天」，每 5 颗星换一张动物贴纸！</div>`;
+  $('kidCard').querySelectorAll('.task').forEach(b => b.onclick = () => {
+    const a = getAch(); const rec = a.days[k] || {ok:false, stars:0, tasks:[]}; rec.tasks = rec.tasks || [];
+    const id = b.dataset.id, had = rec.tasks.includes(id);
+    if (had){ rec.tasks = rec.tasks.filter(x => x !== id); a.stars--; } else { rec.tasks.push(id); a.stars++; }
+    const wasOk = rec.ok; rec.stars = rec.tasks.length; rec.ok = rec.tasks.length >= 4; a.days[k] = rec;
+    a.best = Math.max(a.best, streakOf(a));
+    let sticker = null;
+    const shouldHave = Math.floor(Math.max(0, a.stars) / 5);
+    while (a.stickers.length < shouldHave){ sticker = STICKERS[a.stickers.length % STICKERS.length]; a.stickers.push(sticker); }
+    const nb = newBadges(a); saveAch(a);
+    if (!had){
+      if (rec.ok && !wasOk) celebrate('🏆', '完美的一天！', pick(MSG.kid) + (streakOf(a) > 1 ? `\n已经连续 ${streakOf(a)} 天！` : ''));
+      else if (sticker) celebrate(sticker, '获得新贴纸！', '集齐 5 颗星，换到一只新朋友！' );
+      else if (nb.length) celebrate(nb[0].icon, '获得徽章：' + nb[0].name, pick(MSG.kid));
+      else toast(pick(MSG.kidStar));
+    }
+    renderDay();
+  });
+}
+
+/* 减肥：体重记录 */
+function renderWeight(){
+  const p = prof(), show = p?.mode === 'loss'; $('weightCard').classList.toggle('hidden', !show); if (!show) return;
+  const ws = local.get('weights') || [], start = local.get('w_start') || {kg: p.w, d: ''};
+  const last = ws.length ? ws[ws.length-1].kg : start.kg, lost = r1(start.kg - last), need = r1(last - p.tw);
+  const recent = ws.slice(-14);
+  const mx = Math.max(...recent.map(x => x.kg), start.kg), mn = Math.min(...recent.map(x => x.kg), p.tw);
+  const pts = recent.map((x,i) => `${recent.length===1?150:i/(recent.length-1)*300},${mx===mn?40:(mx-x.kg)/(mx-mn)*70+5}`).join(' ');
+  $('weightCard').innerHTML = `<h3>体重</h3>
+    <div class="rw"><div><b>${last}</b><span>当前 kg</span></div><div><b style="color:var(--g)">${lost > 0 ? '−' + lost : lost < 0 ? '+' + (-lost) : 0}</b><span>已减 kg</span></div><div><b>${need > 0 ? need : '🎯'}</b><span>${need > 0 ? '距目标 kg' : '已达成目标'}</span></div></div>
+    ${recent.length > 1 ? `<svg viewBox="0 0 300 80" style="width:100%;height:80px"><polyline points="${pts}" fill="none" stroke="var(--g)" stroke-width="2.5" stroke-linejoin="round"/></svg>` : ''}
+    <div class="row" style="margin-top:8px"><input id="wIn" type="number" inputmode="decimal" step="0.1" placeholder="今天体重 kg" class="grow"><button class="btn sm" id="wSave">记录</button></div>
+    <div class="tip">建议每周减 0.5–1 kg，每天同一时间（早上起床后）称最准。</div>`;
+  $('wSave').onclick = () => {
+    const kg = +$('wIn').value; if (!(kg > 20 && kg < 300)) { toast('请输入正确的体重'); return; }
+    const list = (local.get('weights') || []).filter(x => x.d !== dateKey(new Date()));
+    list.push({d: dateKey(new Date()), kg}); list.sort((x,y) => x.d < y.d ? -1 : 1); local.set('weights', list.slice(-120));
+    p.w = kg; local.set('profiles', profiles);
+    const a = getAch(); const lostNow = start.kg - kg;
+    if (kg <= p.tw && !a.wm.includes('goal')){ a.wm.push('goal'); saveAch(a); celebrate('🏆', '达成目标体重！', `从 ${start.kg} kg 到 ${kg} kg，你做到了！这份坚持值得好好奖励自己一下 🎁（记得换成「健康模式」保持住）`); }
+    else {
+      const m = Math.floor(lostNow);
+      if (m >= 1 && !a.wm.includes('kg' + m)){ a.wm.push('kg' + m); saveAch(a); celebrate('🎉', `已经减掉 ${m} kg！`, pick(['身体正在悄悄变好，继续保持这个节奏！','每一公斤都是你一口一口认真吃出来的成果 💪','了不起！衣服应该开始松一点了吧 😄'])); }
+      else toast(kg < last ? '比上次轻了 ' + r1(last - kg) + ' kg 👏' : '已记录。体重有波动很正常，看长期趋势就好');
+    }
+    renderWeight();
+  };
+}
+
+/* 手动记一餐 */
+$('manualBtn').onclick = () => {
+  $('meals').insertAdjacentHTML('afterend', `<div id="manualBox" style="margin-top:10px">
+    <textarea id="manualTxt" rows="2" placeholder="例：便利店饭团1个（金枪鱼）+ 无糖绿茶500ml"></textarea>
+    <div class="chips" id="mType" style="margin-top:8px"></div>
+    <button class="btn" style="margin-top:8px" id="manualGo">估算并记录</button></div>`);
+  $('manualBtn').classList.add('hidden');
+  let mt = guessMeal();
+  const drawT = () => { $('mType').innerHTML = MEALS.map(m => `<button class="chip ${m===mt?'on':''}" data-v="${m}">${m}</button>`).join('');
+    $('mType').querySelectorAll('button').forEach(b => b.onclick = () => { mt = b.dataset.v; drawT(); }); };
+  drawT();
+  $('manualGo').onclick = async () => {
+    const txt = $('manualTxt').value.trim(); if (!txt) return;
+    
+    const b = $('manualGo'); b.disabled = true; b.innerHTML = '<span class="spin"></span>估算中…';
+    try{
+      const items = await lookupFood(txt); const t = sumNut(items, 1);
+      const k = dateKey(viewDate); const day = await getDay(k);
+      const ts = dateKey(viewDate) === dateKey(new Date()) ? Date.now() : new Date(viewDate.toDateString()).getTime() + 12*36e5;
+      day.meals.push({ id: Date.now().toString(36), ts, type: mt, name: txt, ratio: 1, thumb: '',
+        items: items.map(i => ({n:i.name, w:r0(i.w)})),
+        t: {kcal:r0(t.kcal), p:r1(t.p), f:r1(t.f), c:r1(t.c), fib:r1(t.fib), na:r0(t.na)} });
+      await putDay(k); $('manualBox').remove(); $('manualBtn').classList.remove('hidden'); toast('已记录'); renderDay();
+    } catch(e){ toast(errText(e)); b.disabled = false; b.textContent = '估算并记录'; }
+  };
+};
+
+/* =========================================================
+   设置
+   ========================================================= */
+function fillSettings(){
+  $('sKcal').value = settings.kcal; $('sP').value = settings.p; $('sF').value = settings.f; $('sC').value = settings.c; $('sNa').value = settings.na;
+}
+$('saveSet').onclick = async () => {
+  const p = +$('sP').value, f = +$('sF').value, c = +$('sC').value;
+  if (Math.abs(p+f+c-100) > 1){ toast('三项比例加起来要等于 100%'); return; }
+  settings = { kcal: +$('sKcal').value || 1800, p, f, c, na: +$('sNa').value || 2000, tier: settings.tier };
+  await saveDoc('settings', settings); saveProvForm(); saveProfileForm(false); toast('已保存');
+};
+</script>
+</body>
+</html>
